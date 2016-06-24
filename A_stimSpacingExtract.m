@@ -1,19 +1,19 @@
-%% 6-23-2016 - David Caldwell - script to look at stim spacing 
+%% 6-23-2016 - David Caldwell - script to look at stim spacing
 % starting with subject 3f2113
 
 %% initialize output and meta dir
-% clear workspace 
+% clear workspace
 close all; clear all; clc
 
-% set input output working directories 
+% set input output working directories
 Z_ConstantsStimSpacing;
 %CODE_DIR = fullfile(myGetenv('gridlab_dir'));
 %scripts_path =  strcat(CODE_DIR,'\Experiment\BetaTriggeredStim\scripts');
 
-% add path for scripts to work with data tanks 
+% add path for scripts to work with data tanks
 addpath('./scripts')
 
-% subject directory, change as needed 
+% subject directory, change as needed
 SUB_DIR = fullfile(myGetenv('subject_dir'));
 
 %% load in subject
@@ -22,28 +22,29 @@ SUB_DIR = fullfile(myGetenv('subject_dir'));
 
 sid = SIDS{1};
 
-% load in tank 
+% load in tank
 if (strcmp(sid, '3f2113'))
     tank = TTank;
     tankSelect = strcat(SUB_DIR,'\',sid,'\data\data\d6\stimMoving\stimMoving');
     tank.openTank(tankSelect);
     
-    % select the block 
-    tank.selectBlock('stimSpacing-3');
-    %  mark stim channels if desired 
-   % stims = [29 28];
+    % select the block
+    tank.selectBlock('stimSpacing-14');
+    %  mark stim channels if desired
+    stim_chans = input('Input the stim channels as an array e.g. [22 30]');
+    % stims = [29 28];
     
-   % load in the data, stim info, sampling rates 
+    % load in the data, stim info, sampling rates
     tic;
     [data, data_info] = tank.readWaveEvent('Wave');
     [stim, stim_info] = tank.readWaveEvent('Stim');
     toc;
     
-    % get sampling rates 
+    % get sampling rates
     fs_data = data_info.SamplingRateHz;
     fs_stim = stim_info.SamplingRateHz;
     
-    % get current delivery 
+    % get current delivery
     [Stm0, Stm0_info] = tank.readWaveEvent('Stm0');
     [Sing, Sing_info] = tank.readWaveEvent('Sing');
     
@@ -114,7 +115,7 @@ xlabel('Time (ms');
 ylabel('Current to be delivered (mA)')
 title('Current to be delivered for all trials')
 
-% delay loks to be 0.2867 ms from below. 
+% delay loks to be 0.2867 ms from below.
 
 %% Plot stims with info from above
 
@@ -132,12 +133,12 @@ title('Finding the delay between current output and stim delivery')
 %
 % plot(t,stims)
 
-% get the delay in stim times 
+% get the delay in stim times
 
 delay = round(0.2867*fs_stim/1e3);
 
 % plot the appropriately delayed signal
-figure 
+figure
 stimTimesBegin = bursts(2,:)-1+delay;
 stimTimesEnd = bursts(3,:)-1+delay;
 stim1Epoched = squeeze(getEpochSignal(stim1,stimTimesBegin,stimTimesEnd));
@@ -153,40 +154,40 @@ title('Stim voltage monitoring with delay added in')
 
 %% extract data
 
-% try and account for delay for the stim times 
+% try and account for delay for the stim times
 stimTimes = bursts(2,:)-1+delay;
 presamps = round(0.1 * fs_data); % pre time in sec
 postsamps = round(0.30 * fs_data); % post time in sec, % modified DJC to look at up to 300 ms after
 
 
-% sampling rate conversion between stim and data 
+% sampling rate conversion between stim and data
 fac = fs_stim/fs_data;
 
-% find times where stims start in terms of data sampling rate 
+% find times where stims start in terms of data sampling rate
 sts = round(stimTimes / fac);
 
 %% Interpolation from miah's code
 
-% uncomment this if wanting to interpolate, broken right now 
+% uncomment this if wanting to interpolate, broken right now
 
 % for i = 1:size(data,2)
 %     presamps = round(0.025 * fs_data); % pre time in sec
 %     postsamps = round(0.125 * fs_data); % post time in sec, % modified DJC to look at up to 300 ms after
 %     eco = data(:,i);
-%     
+%
 %     edd = zeros(size(sts));
 %     efs = fs_data;
-%     
+%
 %     temp = squeeze(getEpochSignal(eco, sts-presamps, sts+postsamps+1));
 %     foo = mean(temp,2);
 %     lastsample = round(0.040 * efs);
 %     foo(lastsample:end) = foo(lastsample-1);
-%     
+%
 %     last = find(abs(zscore(foo))>1,1,'last');
 %     last2 = find(abs(diff(foo))>30e-6,1,'last')+1;
-%     
+%
 %     zc = false;
-%     
+%
 %     if (isempty(last2))
 %         if (isempty(last))
 %             error ('something seems wrong in the triggered average');
@@ -200,45 +201,50 @@ sts = round(stimTimes / fac);
 %             ct = max(last, last2);
 %         end
 %     end
-%     
+%
 %     while (~zc && ct <= length(foo))
 %         zc = sign(foo(ct-1)) ~= sign(foo(ct));
 %         ct = ct + 1;
 %     end
-%     
+%
 %     if (ct > max(last, last2) + 0.10 * efs) % marched along more than 10 msec, probably gone to far
 %         ct = max(last, last2);
 %     end
-%     
+%
 %     % DJC - 8-31-2015 - i believe this is messing with the resizing
 %     % in the figures
 %     %             subplot(8,8,chan);
 %     %             plot(foo);
 %     %             vline(ct);
 %     %
-%     
+%
 %     % comment this part out for no interpolation
 %     for sti = 1:length(sts)
 %         win = (sts(sti)-presamps):(sts(sti)+postsamps+1);
-%         
+%
 %         % interpolation approach
 %         eco(win(presamps:(ct-1))) = interp1([presamps-1 ct], eco(win([presamps-1 ct])), presamps:(ct-1));
 %     end
-%     
+%
 %     data(:,i) = eco;
 % end
 
-%% get the data epochs 
+%% get the data epochs
 dataEpoched = squeeze(getEpochSignal(data,sts-presamps,sts+postsamps+1));
 
-% set the time vector to be set by the pre and post samps  
+% set the time vector to be set by the pre and post samps
 t = (-presamps:postsamps)*1e3/fs_data;
 
 
 
-%% 6-23-2016 
+%% 6-23-2016
 % plot aggregate data for each stim type - THIS ONLY WORKS IF THERE ARE 30
-% TOTAL STIM EPOCHS - stim 9 for instance only has 28 total 
+% TOTAL STIM EPOCHS - stim 9 for instance only has 28 total
+
+% chunk out data
+
+% to separate out low and high
+k=1:10;
 j = 1:10;
 
 figure
@@ -251,6 +257,8 @@ for i = 1:64
     xlim([-100 300])
     title(sprintf('Channel %d',i))
     %     pause(1)
+    
+    dataEpochedLow(:,i,k) = dataEpoched(:,i,j);
     
 end
 subtitle('Average traces for all stimulations - means not subtracted - stims 1:10')
@@ -267,6 +275,8 @@ for i = 65:80
     xlim([-100 300])
     title(sprintf('Channel %d',i))
     %     pause(1)
+    dataEpochedLow(:,i,k) = dataEpoched(:,i,j);
+    
     
 end
 subtitle('Average traces for all stimulations - means not subtracted - stims 1:10')
@@ -285,6 +295,8 @@ for i = 1:64
     xlim([-100 300])
     title(sprintf('Channel %d',i))
     %     pause(1)
+    dataEpochedMid(:,i,k) = dataEpoched(:,i,j);
+    
     
 end
 subtitle('Average traces for all stimulations - means not subtracted stims - stims 11:20')
@@ -301,13 +313,15 @@ for i = 65:80
     xlim([-100 300])
     title(sprintf('Channel %d',i))
     %     pause(1)
+    dataEpochedMid(:,i,k) = dataEpoched(:,i,j);
+    
     
 end
 subtitle('Average traces for all stimulations - means not subtracted - stims 11:20 ')
 xlabel('Time (ms)')
 ylabel('Amplitude (\muV)')
 
-j = 21:28;
+j = 21:30;
 
 figure
 for i = 1:64
@@ -319,6 +333,8 @@ for i = 1:64
     xlim([-100 300])
     title(sprintf('Channel %d',i))
     %     pause(1)
+    dataEpochedHigh(:,i,k) = dataEpoched(:,i,j);
+    
     
 end
 subtitle('Average traces for all stimulations - means not subtracted - stims 21:30 ' )
@@ -335,6 +351,8 @@ for i = 65:80
     xlim([-100 300])
     title(sprintf('Channel %d',i))
     %     pause(1)
+    dataEpochedHigh(:,i,k) = dataEpoched(:,i,j);
+    
     
 end
 subtitle('Average traces for all stimulations - means not subtracted - stims 21:30')
@@ -346,7 +364,7 @@ ylabel('Amplitude (\muV)')
 
 % pick channel
 i = 21;
-% pick range of stims 
+% pick range of stims
 j = 1:10;
 %j = 11:20;
 %j = 21:30;
@@ -356,3 +374,6 @@ plot(t,1e6*mean(dataEpoched(:,i,j),3),'m','LineWidth',1)
 xlabel('time (ms)')
 ylabel('Amplitude (\muV)')
 title(['Average for subselected stims for channel ', num2str(i)])
+
+%%
+save(fullfile(OUTPUT_DIR, ['stim_constantV',num2str(stim_chans(1)),'_',num2str(stim_chans(2))]), 'data_info','dataEpoched','dataEpochedHigh','dataEpochedLow','dataEpochedMid','fs_data','fs_sing','fs_stim','Sing','Sing_info','stim','stim_chans','stim_info','t');
