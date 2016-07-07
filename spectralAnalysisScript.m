@@ -1,104 +1,180 @@
 %% 7/4/2016 - spectral analysis script DJC
 
 
-%% This is to plot the time series and do the FFT of Pre and Post 
+%% This is to plot the time series and do the FFT of Pre and Post
 
 % example channel for stims 28_29, 21.
 % set IDX to be whatever we want to look at channel wise. Can extend to
 % whole matrix/data set later
+
+% channel of interest 
 idx = 21;
+
+% filter it 
 filter_it = input('notch filter? input "yes" or "no"','s');
 
-% get the low signal
-sig = mean(dataEpochedLow(:,idx,:),3);
+
+% pre time window
+pre_begin = -500;
+pre_end = 0;
+% post time window
+post_begin = 5;
+post_end = 505;
+
 
 % extract pre
-t_pre = t(t<0);
+t_pre = t(t<pre_end & t>pre_begin);
 
-% extract post 
-t_post = t(t>5);
+% extract post
+t_post = t(t>post_begin & t<post_end);
+
+%%
+% get the low signal
+sig = mean(dataEpochedLow(:,idx,:),3);
+sigPre = mean(dataEpoched(:,idx,:),3);
+
 
 % filter it?
 if strcmp(filter_it,'yes')
-sig_pre = notch(sig(t<0),[60 120 180 240],fs_data);
-sig_post = notch(sig(t>5),[60 120 180 240],fs_data);
+    sig_pre = notch(sigPre(t<pre_end & t>pre_begin),[60 120 180 240],fs_data);
+    sig_post = notch(sig(t>post_begin & t<post_end),[60 120 180 240],fs_data);
 else
-    sig_pre = sig(t<0);
-    sig_post = sig(t>5);
-
-end
+    sig_pre = sigPre(t>pre_begin & t<pre_end );
+    sig_post = sig(t>post_begin & t<post_end);
     
-
+end
 figure
 
-% plot pre and post 
-% plotting/etc is in spectralAnalysis function 
-[f_pre,P1_pre] = spectralAnalysis(fs_data,t_pre,sig_pre); 
+% plot pre
+% plotting/etc is in spectralAnalysis function
+[f_pre,P1_pre] = spectralAnalysis(fs_data,t_pre,sig_pre);
 
+
+% and post
 [f_post,P1_post] = spectralAnalysis(fs_data,t_post,sig_post);
 
-% get middle signal 
+% get middle signal
 sig = mean(dataEpochedMid(:,idx,:),3);
 
 if strcmp(filter_it,'yes')
-sig_post = notch(sig(t>5),[60 120 180 240],fs_data);
+    sig_post = notch(sig(t>post_begin & t<post_end),[60 120 180 240],fs_data);
 else
-    sig_post = sig(t>5);
-
+    sig_post = sig(t>post_begin & t<post_end);
+    
 end
-
-sig_post = sig(t>5);
-sig_post = notch(sig(t>5),[60 120 180 240],fs_data);
-
 
 [f_post,P1_post] = spectralAnalysis(fs_data,t_post,sig_post);
 
-% get high signal 
+
+% get high signal
 
 sig = mean(dataEpochedHigh(:,idx,:),3);
 
 if strcmp(filter_it,'yes')
-sig_post = notch(sig(t>5),[60 120 180 240],fs_data);
+    sig_post = notch(sig(t>post_begin & t<post_end),[60 120 180 240],fs_data);
 else
-    sig_post = sig(t>5);
-
+    sig_post = sig(t>post_begin & t<post_end);
+    
 end
 
 [f_post,P1_post] = spectralAnalysis(fs_data,t_post,sig_post);
 
-% set legend 
-legend({'pre','low','mid','high'})
 
-%% This is to stack the data so we can do SVD and DMD 
+
+%% do them one at a time vs their own pre 
+
+% change this to be dataEpochedLow, Mid, Or High if desired - set legend
+% accordingly 
+sigL = squeeze(dataEpochedHigh(:,idx,:));
+
+for i = 1:size(sigL,2)
+    
+    if strcmp(filter_it,'yes')
+        sig_pre = notch(sigL((t<pre_end & t>pre_begin),i),[60 120 180 240],fs_data);
+        sig_postL = notch(sigL((t>post_begin & t<post_end),i),[60 120 180 240],fs_data);
+    else
+        sig_pre = sigL((t<pre_end & t>pre_begin),i);
+        sig_postL = (sigL((t>post_begin & t<post_end),i));
+
+    end
+    
+    figure
+    [f_pre,P1_pre] = spectralAnalysis(fs_data,t_pre,sig_pre);
+    [f_postL,P1_postL] = spectralAnalysis(fs_data,t_post,sig_postL);
+
+    legend({'pre','high'})
+    % do some time frequency analysis 
+    figure
+    timeFrequencyAnalWavelet(sig_pre,sig_postH,t_pre,t_post,fs_data)
+
+    
+    
+end
+
+
+%% do them one at a time, pre, low, middle, high (PRE BASELINE IS THE ONE PLOTTED)
+% they would all have to be the same length 
+
+sigH = squeeze(dataEpochedHigh(:,idx,:));
+sigM = squeeze(dataEpochedMid(:,idx,:));
+sigL = squeeze(dataEpochedLow(:,idx,:));
+
+for i = 1:size(sigH,2)
+    
+    if strcmp(filter_it,'yes')
+        sig_pre = notch(sigL((t<pre_end & t>pre_begin),i),[60 120 180 240],fs_data);
+        sig_postL = notch(sigL((t>post_begin & t<post_end),i),[60 120 180 240],fs_data);
+        sig_postM = notch(sigM((t>post_begin & t<post_end),i),[60 120 180 240],fs_data);
+        sig_postH = notch(sigH((t>post_begin & t<post_end),i),[60 120 180 240],fs_data);
+    else
+        sig_pre = sigL((t<pre_end & t>pre_begin),i);
+        sig_postL = (sigL((t>post_begin & t<post_end),i));
+        sig_postM = (sigM((t>post_begin & t<post_end),i));
+        sig_postH = (sigH((t>post_begin & t<post_end),i));
+    end
+    
+    figure
+    [f_pre,P1_pre] = spectralAnalysis(fs_data,t_pre,sig_pre);
+    [f_postL,P1_postL] = spectralAnalysis(fs_data,t_post,sig_postL);
+    [f_postM,P1_postM] = spectralAnalysis(fs_data,t_post,sig_postM);
+    [f_postH,P1_postH] = spectralAnalysis(fs_data,t_post,sig_postH);
+    
+    
+end
+
+
+
+
+%% This is to stack the data so we can do SVD and DMD
 %close all;
 
-% example channel for stim_28_29 
+% example channel for stim_28_29
 idx = 21;
 
 % this selects all of the High data more than 5 ms after the stim (let's
 % ignore stim for now)
 
-dataNoStim = dataEpochedHigh(t>5,:,:);
+dataNoStim = dataEpochedHigh((t>post_begin & t<post_end),:,:);
 
-% get an example Channel 
+% get an example Channel
 dataStacked = dataNoStim(:,idx,:);
-% stack that example channel 
+% stack that example channel
 dataStacked = dataStacked(:);
 figure
 plot(dataStacked);
 
 % reshift the data so we can do a vector operation to stack all of it like
-% we did for that one example 
+% we did for that one example
 data_permuted  = permute(dataNoStim,[1,3,2]);
 
 % stack the data
 
 data_stacked = reshape(data_permuted,[size(data_permuted,1)*size(data_permuted,2),size(data_permuted,3)]);
 figure
-% compare the below plot to that example stacked channel above to confirm 
+% compare the below plot to that example stacked channel above to confirm
 plot(data_stacked(:,idx))
 
-% make a vector of all of the channels we have 
+% make a vector of all of the channels we have
 goods = ones(80,1);
 
 % pick the ones to ignore
@@ -111,17 +187,17 @@ goods = logical(goods);
 % select the good channels
 dataStackedGood = data_stacked(:,goods);
 
-% decide if we want to filter it 
+% decide if we want to filter it
 notch_stacked = input('notch the data? "yes" or "no"','s');
 if strcmp(notch_stacked,'yes')
     dataStackedGood = notch(dataStackedGood,[60 120 180 240],fs_data);
     figure
-    % plot the filtered data for a sanity check 
+    % plot the filtered data for a sanity check
     plot(dataStackedGood(:,idx));
 end
 
-%% This is doing a SVD of our data matrix 
-% looks at the first 3 modes in space, time 
+%% This is doing a SVD of our data matrix
+% looks at the first 3 modes in space, time
 [u,s,v] = svd(dataStackedGood','econ');
 
 figure
@@ -137,7 +213,7 @@ semilogy(diag(s)/sum(diag(s)),'ko','Linewidth',[2])
 title('singular values, fractions, semilog plot')
 set(gca,'fontsize',14)
 
-% look at the modes in space 
+% look at the modes in space
 figure
 x = [1:size(dataStackedGood,2)];
 plot(x,u(:,1:3),'Linewidth',[2])
@@ -183,7 +259,7 @@ semilogy(diagS(1:5)/sum(diagS(1:5)),'ko','Linewidth',[2])
 title('singular values, fractions, semilog plot')
 set(gca,'fontsize',14)
 
-%% more DMD reconstruction - similarly, not of much utility yet. 
+%% more DMD reconstruction - similarly, not of much utility yet.
 
 t = length(Xraw');
 
