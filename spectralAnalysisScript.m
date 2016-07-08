@@ -105,7 +105,7 @@ for i = 1:size(sigL,2)
     legend({'pre','high'})
     % do some time frequency analysis 
     figure
-    timeFrequencyAnalWavelet(sig_pre,sig_postH,t_pre,t_post,fs_data)
+    timeFrequencyAnalWavelet(sig_pre,sig_postL,t_pre,t_post,fs_data)
 
     
     
