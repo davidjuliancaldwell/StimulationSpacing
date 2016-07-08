@@ -143,6 +143,39 @@ for i = 1:size(sigH,2)
 end
 
 
+%% Plot all 10 stim pulses for the given trial
+% change this to be dataEpochedLow, Mid, Or High if desired - set legend
+% accordingly 
+sigL = squeeze(dataEpochedHigh(:,idx,:));
+labels = cell(1, size(sigL,2));
+figure
+gcolor=1.0; % this is to control the color of the line
+colorIncrement=0.1;
+for i = 1:size(sigL,2)
+    if strcmp(filter_it,'yes')
+        sig_pre = notch(sigL((t<pre_end & t>pre_begin),i),[60 120 180 240],fs_data);
+        sig_postL = notch(sigL((t>post_begin & t<post_end),i),[60 120 180 240],fs_data);
+    else
+        sig_pre = sigL((t<pre_end & t>pre_begin),i);
+        sig_postL = (sigL((t>post_begin & t<post_end),i));
+    end
+    [f,P1] = spectralAnalysisComp(fs_data,sig_postL);
+    
+    plot((f),(P1),'Color', [0.0 gcolor 1.0],'linewidth',2)
+    hold on
+%     
+%     [f,P1] = spectralAnalysisComp(fs_data,sig_pre);
+%     plot((f),(P1),'linewidth',[2])
+labels{i}=['high ', num2str(i)];
+gcolor=gcolor-colorIncrement;
+end
+title('Single-Sided Amplitude Spectrum of X(t) all pulses in trial')
+xlabel('f (Hz)')
+ylabel('|P1(f)|')
+xlim([0 100])
+ylim([0 2e-5])
+set(gca,'fontsize',14)
+legend(labels)
 
 
 %% This is to stack the data so we can do SVD and DMD
