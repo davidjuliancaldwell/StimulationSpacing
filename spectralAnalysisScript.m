@@ -1,25 +1,46 @@
 %% 7/4/2016 - spectral analysis script DJC
+%This is to plot the time series and do the FFT of Pre and Post
+
+%% load a data file
+
+% clear workspace
+close all; clear all; clc
+
+% load in the datafile of interest!
+% have to have a value assigned to the file to have it wait to finish
+% loading...mathworks bug
+uiimport('-file');
+
+%SPECIFIC ONLY TO DJC DESKTOP RIGHT NOW
+%load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\StimulationSpacing\1sBefore1safter\stim_12_52.mat')
 
 
-%% This is to plot the time series and do the FFT of Pre and Post
+%%
+% add in sid - 7-13-2016
+sid = '3f2113';
 
-% example channel for stims 28_29, 21.
-% set IDX to be whatever we want to look at channel wise. Can extend to
-% whole matrix/data set later
+% define stimulation channels
+stimChan1 = stim_chans(1);
+stimChan2= stim_chans(2);
 
-% channel of interest 
-idx = 32;
 
-% filter it 
-filter_it = input('notch filter? input "yes" or "no"','s');
+% ui box for input
+prompt = {'whats your channel of interest?','notch filter? input "y" or "n"'};
+dlg_title = 'Input';
+num_lines = 1;
+defaultans = {'60','n'};
+answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
+idx = str2num(answer{1});
+filter_it = answer{2};
+
 
 
 % pre time window
-pre_begin = -500;
+pre_begin = -450;
 pre_end = 0;
 % post time window
 post_begin = 5;
-post_end = 505;
+post_end = (450+post_begin);
 
 
 % extract pre
@@ -35,7 +56,7 @@ sigPre = mean(dataEpoched(:,idx,:),3);
 
 
 % filter it?
-if strcmp(filter_it,'yes')
+if strcmp(filter_it,'y')
     sig_pre = notch(sigPre(t<pre_end & t>pre_begin),[60 120 180 240],fs_data);
     sig_post = notch(sig(t>post_begin & t<post_end),[60 120 180 240],fs_data);
 else
@@ -56,7 +77,7 @@ figure
 % get middle signal
 sig = mean(dataEpochedMid(:,idx,:),3);
 
-if strcmp(filter_it,'yes')
+if strcmp(filter_it,'y')
     sig_post = notch(sig(t>post_begin & t<post_end),[60 120 180 240],fs_data);
 else
     sig_post = sig(t>post_begin & t<post_end);
@@ -70,7 +91,7 @@ end
 
 sig = mean(dataEpochedHigh(:,idx,:),3);
 
-if strcmp(filter_it,'yes')
+if strcmp(filter_it,'y')
     sig_post = notch(sig(t>post_begin & t<post_end),[60 120 180 240],fs_data);
 else
     sig_post = sig(t>post_begin & t<post_end);
@@ -81,40 +102,40 @@ end
 
 
 
-%% do them one at a time vs their own pre 
+%% do them one at a time vs their own pre
 
 % change this to be dataEpochedLow, Mid, Or High if desired - set legend
-% accordingly 
+% accordingly
 sigL = squeeze(dataEpochedHigh(:,idx,:));
 
 for i = 1:size(sigL,2)
     
-    if strcmp(filter_it,'yes')
+    if strcmp(filter_it,'y')
         sig_pre = notch(sigL((t<pre_end & t>pre_begin),i),[60 120 180 240],fs_data);
         sig_postL = notch(sigL((t>post_begin & t<post_end),i),[60 120 180 240],fs_data);
     else
         
         sig_pre = sigL((t<pre_end & t>pre_begin),i);
         sig_postL = (sigL((t>post_begin & t<post_end),i));
-
+        
     end
     
     figure
     [f_pre,P1_pre] = spectralAnalysis(fs_data,t_pre,sig_pre);
     [f_postL,P1_postL] = spectralAnalysis(fs_data,t_post,sig_postL);
-
+    
     legend({'pre','high'})
-    % do some time frequency analysis 
+    % do some time frequency analysis
     figure
     timeFrequencyAnalWavelet(sig_pre,sig_postL,t_pre,t_post,fs_data)
-
+    
     
     
 end
 
 
 %% do them one at a time, pre, low, middle, high (PRE BASELINE IS THE ONE PLOTTED)
-% they would all have to be the same length 
+% they would all have to be the same length
 
 sigH = squeeze(dataEpochedHigh(:,idx,:));
 sigM = squeeze(dataEpochedMid(:,idx,:));
@@ -122,7 +143,7 @@ sigL = squeeze(dataEpochedLow(:,idx,:));
 
 for i = 1:size(sigH,2)
     
-    if strcmp(filter_it,'yes')
+    if strcmp(filter_it,'y')
         sig_pre = notch(sigL((t<pre_end & t>pre_begin),i),[60 120 180 240],fs_data);
         sig_postL = notch(sigL((t>post_begin & t<post_end),i),[60 120 180 240],fs_data);
         sig_postM = notch(sigM((t>post_begin & t<post_end),i),[60 120 180 240],fs_data);
@@ -146,14 +167,14 @@ end
 
 %% Plot all 10 stim pulses for the given trial
 % change this to be dataEpochedLow, Mid, Or High if desired - set legend
-% accordingly 
+% accordingly
 sigL = squeeze(dataEpochedHigh(:,idx,:));
 labels = cell(1, size(sigL,2));
 figure
 gcolor=1.0; % this is to control the color of the line
 colorIncrement=0.1;
 for i = 1:size(sigL,2)
-    if strcmp(filter_it,'yes')
+    if strcmp(filter_it,'y')
         sig_pre = notch(sigL((t<pre_end & t>pre_begin),i),[60 120 180 240],fs_data);
         sig_postL = notch(sigL((t>post_begin & t<post_end),i),[60 120 180 240],fs_data);
     else
@@ -164,11 +185,11 @@ for i = 1:size(sigL,2)
     
     plot((f),(P1),'Color', [0.0 gcolor 1.0],'linewidth',2)
     hold on
-%     
-%     [f,P1] = spectralAnalysisComp(fs_data,sig_pre);
-%     plot((f),(P1),'linewidth',[2])
-labels{i}=['high ', num2str(i)];
-gcolor=gcolor-colorIncrement;
+    %
+    %     [f,P1] = spectralAnalysisComp(fs_data,sig_pre);
+    %     plot((f),(P1),'linewidth',[2])
+    labels{i}=['high ', num2str(i)];
+    gcolor=gcolor-colorIncrement;
 end
 title('Single-Sided Amplitude Spectrum of X(t) all pulses in trial')
 xlabel('f (Hz)')
@@ -178,91 +199,94 @@ ylim([0 2e-5])
 set(gca,'fontsize',14)
 legend(labels)
 
+%% DJC - 7-13-2016 Added in distance
+
+
+if (strcmp(sid,'3f2113'))
+    load('trodes.mat');
+    locs = Grid;
+else
+end
+
+% - fakeTrodes.mat is deprecated now that Nile has put up the real trodes
+% file!
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% requires functions matrixDist.m and channelExtract.m
+% also a fake trodes file for now
+
+% if (strcmp(sid,'3f2113'))
+%     load('fakeTrodes.mat');
+%     locs = matrixSorted(:,(2:end));
+% else
+% end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+[stim1_dist,stim2_dist] = distanceAnalysis(locs,stimChan1,stimChan2);
+
 
 %% This is to stack the data so we can do SVD and DMD
-%close all;
+% start with dataEpochedHigh
 
-% example channel for stim_28_29
-idx = 21;
+prompt = {'what is the list of channels to stack ? e.g. 1:8,12 '};
+dlg_title = 'StackChans';
+num_lines = 1;
+defaultans = {'1:64'};
+answerChans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+chansToStack = str2num(answerChans{1});
 
-% this selects all of the High data more than 5 ms after the stim (let's
-% ignore stim for now)
-
-dataNoStim = dataEpochedHigh((t>post_begin & t<post_end),:,:);
-
-% get an example Channel
-dataStacked = dataNoStim(:,idx,:);
-% stack that example channel
-dataStacked = dataStacked(:);
-figure
-plot(dataStacked);
-
-% reshift the data so we can do a vector operation to stack all of it like
-% we did for that one example
-data_permuted  = permute(dataNoStim,[1,3,2]);
-
-% stack the data
-
-data_stacked = reshape(data_permuted,[size(data_permuted,1)*size(data_permuted,2),size(data_permuted,3)]);
-figure
-% compare the below plot to that example stacked channel above to confirm
-plot(data_stacked(:,idx))
-
-% make a vector of all of the channels we have
-goods = ones(80,1);
-
-% pick the ones to ignore
-bads = [28,29,72:80];
-goods(bads) = 0;
-
-% make a logical matrix
-goods = logical(goods);
-
-% select the good channels
-dataStackedGood = data_stacked(:,goods);
-
-% decide if we want to filter it
-notch_stacked = input('notch the data? "yes" or "no"','s');
-if strcmp(notch_stacked,'yes')
-    dataStackedGood = notch(dataStackedGood,[60 120 180 240],fs_data);
-    figure
-    % plot the filtered data for a sanity check
-    plot(dataStackedGood(:,idx));
-end
+%dataStackedGood = dataStack(dataEpochedHigh,t,post_begin,post_end,goodChans,stimChan1,stimChan2,[],fs_data,filter_it);
+dataStackedGood = dataStack(dataEpochedHigh,t,post_begin,post_end,chansToStack,[],[],[],fs_data,filter_it);
 
 %% This is doing a SVD of our data matrix
 % looks at the first 3 modes in space, time
-[u,s,v] = svd(dataStackedGood','econ');
 
-figure
-plot(diag(s),'ko','Linewidth',[2])
-% to get percentage in mode
-subplot(2,1,1) % plot normal
-plot(diag(s)/sum(diag(s)),'ko','Linewidth',[2])
-title('singular values, fractions')
-set(gca,'fontsize',14)
+% bad channels 
+prompt = {'what is the list of channels to IGNORE? e.g. 1:8,12 '};
+dlg_title = 'BadChannels';
+num_lines = 1;
+defaultans = {''};
+answerChans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+badChans = str2num(answerChans{1});
 
-subplot(2,1,2) % plot semilog
-semilogy(diag(s)/sum(diag(s)),'ko','Linewidth',[2])
-title('singular values, fractions, semilog plot')
-set(gca,'fontsize',14)
+prompt = {'what is the list of channels to USE? e.g. 1:8,12 '};
+dlg_title = 'BadChannels';
+num_lines = 1;
+defaultans = {''};
+answerChans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+goodChans = str2num(answerChans{1});
 
-% look at the modes in space
-figure
-x = [1:size(dataStackedGood,2)];
-plot(x,u(:,1:3),'Linewidth',[2])
-title('mode spatial locations'), legend('show')
-legend({'mode 1','mode 2','mode 3'});
+% if we want to plot it spatially, we need to use at least the 64 channels
+% in the grid!
+
+% etither give it SVDanalysis(.....,[],goodChans); 
+%or SVDanalysis(.......,badChans,[]);
+
+fullData = true;
+%[u,s,v] = SVDanalysis(dataStackedGood,stim_chans,fullData,badChans,[]);
+[u,s,v] = SVDanalysis(dataStackedGood,stim_chans,fullData,[],goodChans);
 
 
-% look at temporal part - columns of v
-figure
 
-plot(v(:,1:3),'Linewidth',[2])
-title('Temporal portion of the 3 modes'), legend('show')
-legend({'mode 1','mode 2','mode 3'});
+%% parametric plot
+% use the v values from the SVDanalysis function from above
+
+
+prompt = {'plot first cycle of modes, or all of time? "1st" or "all" '};
+dlg_title = 'BadChannels';
+num_lines = 1;
+defaultans = {'1st'};
+answerChans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+cycles = answerChans{1};
+
+parametricPlotSVD(v,post_begin,post_end,fs_data,cycles)
+
 
 % BELOW THIS IS CURRENTLY NOT FUN
+
+
+
 %% dmd - this is trying to do DMD - I don't think there's much useful from here until we talk to them
 addpath('./dmd-neuro-bing')
 Xraw = dataStackedGood';
