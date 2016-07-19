@@ -8,7 +8,7 @@
 % whole matrix/data set later
 
 % channel of interest 
-idx = 21;
+idx = 32;
 
 % filter it 
 filter_it = input('notch filter? input "yes" or "no"','s');
@@ -93,6 +93,7 @@ for i = 1:size(sigL,2)
         sig_pre = notch(sigL((t<pre_end & t>pre_begin),i),[60 120 180 240],fs_data);
         sig_postL = notch(sigL((t>post_begin & t<post_end),i),[60 120 180 240],fs_data);
     else
+        
         sig_pre = sigL((t<pre_end & t>pre_begin),i);
         sig_postL = (sigL((t>post_begin & t<post_end),i));
 
@@ -263,9 +264,10 @@ legend({'mode 1','mode 2','mode 3'});
 
 % BELOW THIS IS CURRENTLY NOT FUN
 %% dmd - this is trying to do DMD - I don't think there's much useful from here until we talk to them
-
+addpath('./dmd-neuro-bing')
 Xraw = dataStackedGood';
 dt = 1/fs_data;
+
 
 % added in dt optional argument, dt is our sampling frequency
 % added in number of stacks. Using 5 for right now. The paper talks about
