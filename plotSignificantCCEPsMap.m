@@ -1,10 +1,11 @@
 %% 7-19-2016 - Function to plot significant CCEP map
 
-function [] = plotSignificantCCEPsMap(sig,t,stims,chansCCEPs)
-
+function [] = plotSignificantCCEPsMap(sig,t,stims,chansCCEPs,cceps)
+% JC: sig must be 3D: time*channels*epochs
+% or, 2D: time*channels
 
 figure
-cceps = 'yes';
+%cceps = 'yes';
 
 
 CT = cbrewer('qual','Set1',3);
@@ -16,7 +17,16 @@ for idx = 1:64
     axis tight
     %axis off
     
-    p = plot(t',mean(sig(:,idx,:),3),'linewidth',2);
+    if ndims(sig)==3
+        % Take the mean across epochs
+        p = plot(t',mean(sig(:,idx,:),3),'linewidth',2);
+    elseif ismatrix(sig)
+        % assume that you've already averaged, or just want to plot single
+        % epochs
+        p = plot(t',sig(:,idx),'linewidth',2);
+    else 
+        error('dimensions of your signal, sig, must be 2 or 3')
+    end
     
     if strcmp(cceps,'yes')
         ylim([-150e-6 150e-6])
