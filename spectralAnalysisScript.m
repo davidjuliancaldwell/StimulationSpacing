@@ -393,7 +393,8 @@ defaultans = {'1st'};
 answerChans = inputdlg(prompt,dlg_title,num_lines,defaultans);
 cycles = answerChans{1};
 
-parametricPlotSVD(v,post_begin,post_end,fs_data,cycles)
+modes=[2:4];
+parametricPlotSVD(v,post_begin,post_end,fs_data,cycles,modes)
 
 
 %% Reconstruction with the first few dominant modes (columns of U) 
