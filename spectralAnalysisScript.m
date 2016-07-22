@@ -19,6 +19,10 @@ addpath(genpath(pwd))
 %SPECIFIC ONLY TO JAC DESKTOP RIGHT NOW
 load('C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\stim_constantV26_31.mat')
 
+%SPECIFIC ONLY TO JAC Laptop RIGHT NOW
+% load('/Users/jcronin/Desktop/Data/3f2113/1sBefore1safter/stim_constantV26_31.mat')
+
+
 %%
 % add in sid - 7-13-2016
 sid = '3f2113';
