@@ -101,6 +101,6 @@ co = get(gca,'ColorOrder');
 for i=1:length(modes)
     subplot(numSubs,1,i+1)
     plot(v(:,modes(i)),'Linewidth',[2],'color',co(i,:));
-    title(['Temporal portion of mode #: ', num2str(i)])
+    title(['Temporal portion of mode #: ', num2str(modes(i))])
 end
 end
