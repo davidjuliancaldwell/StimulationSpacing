@@ -17,7 +17,7 @@ addpath(genpath(pwd))
 %load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\StimulationSpacing\1sBefore1safter\stim_12_52.mat')
 
 %SPECIFIC ONLY TO JAC DESKTOP RIGHT NOW
-load('C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\stim_26_31.mat')
+load('C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\stim_constantV26_31.mat')
 
 %%
 % add in sid - 7-13-2016
@@ -345,7 +345,7 @@ defaultGood = 1:64;
 
 if strcmp(use_sigCCEPs,'y')
     temp = zeros(size(defaultGood));
-    temp(sigCCEPs) = 1;
+    temp(sigCCEPs(~(sigCCEPs>64))) = 1;
     goodChans = defaultGood(logical(temp));
 else
     % bad channels
@@ -377,9 +377,12 @@ end
 
 fullData = true;
 %[u,s,v] = SVDanalysis(dataStackedGood,stim_chans,fullData,badChans,[]);
-[u,s,v, dataSVD] = SVDanalysis(dataStackedGood,stim_chans,fullData,[],goodChans);
+modes = 1:3;
+[u,s,v, dataSVD, goods] = SVDanalysis(dataStackedGood,stim_chans,fullData,[],goodChans, modes);
 
-
+%% If you want to plot some other modes
+modes = [2:4];
+SVDplot(u,s,v, fullData, goods, modes);
 
 %% parametric plot (mode 1 vs. mode 2 vs. mode 3)
 % use the v values from the SVDanalysis function from above
@@ -400,8 +403,8 @@ dataR=u(:,modes)*s(modes, modes)*v(:,modes)';
 
 % Add rows back in for the stim channels, so that we have 64 channels total
 dataR_withStim = zeros(64, size(dataR,2));
-temp = ones(64,1);
-temp(stim_chans) = 0;
+temp = zeros(64,1);
+temp(goodChans) = 1;
 dataR_withStim(logical(temp),:) = dataR;
 
 % Now I see two ways of plotting this projected data:
@@ -436,8 +439,8 @@ plotSignificantCCEPsMap(sig(:,:,epoch), t_post,stim_chans,sigCCEPs, 'no');
 % onto the dominant modes
 % Change time to use the stacked or unstacked data
 modes=[1:3];
-channels = [1:62]; % max of 62, since this doens't include the stim channels
-
+% channels = [1:length(goodChans)]; % max of 62, since this doens't include the stim channels
+channels = 2;
 % time = 1:size(A_proj,2); % All stims/epochs
 epoch = 2;
 
@@ -459,15 +462,14 @@ zlabel(['Mode ', num2str(modes(3))]);
 
 % Add in the stim channels 
 sig = zeros(64, size(dataR,2),3);
-temp = ones(64,1);
-temp(stim_chans) = 0;
+temp = zeros(64,1);
+temp(goodChans) = 1;
 sig(logical(temp),:,:) = A_proj;
 
 % sig in 3D: time*channels*epochs
 sig = permute(sig, [2, 1, 3]);
 
 plotSignificantCCEPsMap(sig, (0:size(dataR_withStim,2)-1)/fs_data*1000, stim_chans,sigCCEPs, 'plot3');
-
 %% Local SVD... NOT DONE!!!!!!!!!!!!!!!!!!!!!!!!!!
 % So what we already did u, v, and s are the global modes
 % Now calculate some 'local' modes
