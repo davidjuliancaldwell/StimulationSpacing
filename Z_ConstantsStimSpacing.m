@@ -1,4 +1,4 @@
-SIDS = {'3f2113'};
+SIDS = {'3f2113','20f8a3'};
 
 OUTPUT_DIR = fullfile(myGetenv('OUTPUT_DIR'), 'stimSpacing', 'figures');
 TouchDir(OUTPUT_DIR);

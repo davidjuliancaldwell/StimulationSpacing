@@ -18,15 +18,17 @@ Wave = structureData.Wave;
 
 %%
 % ui box for input for stimulation channels
-prompt = {'how many channels did we record from? e.g 48 ', 'what were the stimulation channels? e.g 28 29 ', 'how long before each stimulation do you want to look? in ms e.g. 1', 'how long after each stimulation do you want to look? in ms e.g 5'};
+prompt = {'how many channels did we record from? e.g 48 ', 'what were the stimulation channels? e.g 28 29 ', 'how long before each stimulation do you want to look? in ms e.g. 1', 'how long after each stimulation do you want to look? in ms e.g 5','process data to remove z>3 outliers?','subtract mean if DC coupled?'};
 dlg_title = 'StimChans';
 num_lines = 1;
-defaultans = {'48','28 29','1','5'};
+defaultans = {'48','28 29','1','1','y','y'};
 answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
 numChans = str2num(answer{1});
 chans = str2num(answer{2});
 preTime = str2num(answer{3});
 postTime = str2num(answer{4});
+zScoreThresh = answer{5};
+meanSubtract = answer{6};
 
 %%
 % first and second stimulation channel
@@ -46,6 +48,28 @@ sing = Sing.data;
 
 % recording data
 data = Wave.data;
+
+% DJC - 8-24-2016 - if it's DC coupled, below
+
+% zscore threshold to clear it 
+
+if strcmp(zScoreThresh,'y')
+    
+        zScoredSig = zscore(data(:,1));
+        dataTemp = data(abs(zScoredSig)<3,:);
+        clear data;
+        data = dataTemp;
+        clear dataTemp;
+        
+    
+end
+
+if strcmp(meanSubtract,'y')
+    
+            data = data-repmat(mean(data,1), [size(data, 1), 1]);
+
+    
+end
 
 
 %% plot stim channels if interested
@@ -169,8 +193,8 @@ sts = round(stimTimes / fac);
 % be delivered....and the ECoG recording. which would be 2.3 ms?
 
 delay2 = 14;
-sts = round(stimTimes / fac) + delay2;
-%sts = round(stimTimes / fac);
+%sts = round(stimTimes / fac) + delay2;
+sts = round(stimTimes / fac);
 
 %% get the data epochs
 dataEpoched = squeeze(getEpochSignal(data,sts-presamps,sts+postsamps+1));
