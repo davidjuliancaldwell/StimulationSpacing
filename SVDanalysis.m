@@ -28,6 +28,45 @@ dataSVD = dataTrim';
 % is the time points (rows = sensors, columns = samples)
 
 [u,s,v] = svd(dataSVD,'econ');
+%% - DJC 9-1-2016 - adding in SVD analysis 
+
+% https://purl.stanford.edu/vg705qn9070
+% from their function 
+
+% Usage in unknown noise level:
+%
+%   Given an m-by-n matrix Y known to be low rank and observed in white
+%   noise with mean zero and unknown variance, form a denoised matrix 
+%   Xhat by:
+%  
+%   [U D V] = svd(Y); 
+%   y = diag(Y); 
+%   y( y < (optimal_SVHT_coef_sigma_unknown(m/n,0) * median(y)) ) = 0; 
+%   Xhat = U * diag(y) * V';
+% 
+
+%%
+
+% look at coefficients, singular values 
+
+m = size(dataSVD,1);
+n = size(dataSVD,2);
+
+% this y is just the singular values sorted
+y = svd(dataSVD,'econ');
+
+% this is the singular value cutoff 
+coeffs = optimal_SVHT_coef(m/n,0);
+
+
+% denoised matrix 
+
+dataSVD_denoise = diag(dataSVD);
+dataSVD_denoise ( dataSVD_denoise  < (optimal_SVHT_coef(m/n,0) * median(dataSVD_denoise )) ) = 0;
+Xhat = u * diag(dataSVD_denoise ) * v';
+
+
+%%
 
 % have to augment u.
 

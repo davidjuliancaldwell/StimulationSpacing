@@ -14,10 +14,10 @@ addpath(genpath(pwd))
 %uiimport('-file');
 
 %SPECIFIC ONLY TO DJC DESKTOP RIGHT NOW
-%load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\StimulationSpacing\1sBefore1safter\stim_12_52.mat')
+load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\CSNE YSP 2016\1sBefore1safter\stim_26_31.mat')
 
 %SPECIFIC ONLY TO JAC DESKTOP RIGHT NOW
-load('C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\stim_constantV26_31.mat')
+% load('C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\stim_constantV26_31.mat')
 
 %SPECIFIC ONLY TO JAC Laptop RIGHT NOW
 % load('/Users/jcronin/Desktop/Data/3f2113/1sBefore1safter/stim_constantV26_31.mat')
