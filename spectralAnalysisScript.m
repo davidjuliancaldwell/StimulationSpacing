@@ -14,7 +14,9 @@ addpath(genpath(pwd))
 %uiimport('-file');
 
 %SPECIFIC ONLY TO DJC DESKTOP RIGHT NOW
-load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\CSNE YSP 2016\1sBefore1safter\stim_26_31.mat')
+%load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\CSNE YSP 2016\1sBefore1safter\stim_12_52.mat')
+
+load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\20f8a3\StimulationSpacingChunked\stim_17_24.mat')
 
 %SPECIFIC ONLY TO JAC DESKTOP RIGHT NOW
 % load('C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\stim_constantV26_31.mat')
@@ -26,6 +28,8 @@ load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\CSNE YSP 2016\1sBefore1saf
 %%
 % add in sid - 7-13-2016
 sid = '3f2113';
+
+sid = '20f8a3';
 
 % define stimulation channels
 stimChan1 = stim_chans(1);

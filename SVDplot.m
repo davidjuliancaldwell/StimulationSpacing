@@ -45,6 +45,10 @@ if fullData
         
         colormap(CT);
         colorbar;
+        minV = min(tempModeFake);
+        maxV = max(tempModeFake);
+        val = max(abs(minV),abs(maxV));
+        caxis([-val val])
         title(['Grid Electrodes - mode ' num2str(i)]);
         
         % label the grid - from http://stackoverflow.com/questions/3942892/how-do-i-visualize-a-matrix-with-colors-and-values-displayed
