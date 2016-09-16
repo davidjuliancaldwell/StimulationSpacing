@@ -91,7 +91,7 @@ subDiag = subDiag(1:length(modes));
 % scale them by singular values for the combined plot, NOT for individual
 numSubs = length(modes)+1;
 subplot(numSubs,1,1)
-plot(v(:,modes).*repmat(subDiag,[1 size(v,1)])','Linewidth',[2])
+plot(v(:,modes).*repmat(subDiag,[1 size(v,1)])')
 title({'Temporal portion of the 3 modes', 'scaled by singular value'}), legend('show')
 
 leg=cell(length(modes),1);
@@ -104,7 +104,7 @@ co = get(gca,'ColorOrder');
 
 for i=1:length(modes)
     subplot(numSubs,1,i+1)
-    plot(v(:,modes(i)),'Linewidth',[2],'color',co(i,:));
+    plot(v(:,modes(i)), 'color',co(i,:));
     title(['Temporal portion of mode #: ', num2str(modes(i))])
 end
 end

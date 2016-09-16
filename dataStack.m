@@ -19,7 +19,7 @@ if(~exist('stim_1','var'))
     stim_1  = [];
 end
 
-if(~exist('stim-2','var'))
+if(~exist('stim_2','var'))
     stim_2 = [];
 end
 
