@@ -14,12 +14,12 @@ addpath(genpath(pwd))
 %uiimport('-file');
 
 %SPECIFIC ONLY TO DJC DESKTOP RIGHT NOW
-%load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\CSNE YSP 2016\1sBefore1safter\stim_12_52.mat')
+load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\CSNE YSP 2016\1sBefore1safter\stim_12_52.mat')
 
 % load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\20f8a3\StimulationSpacingChunked\stim_17_24.mat')
 
 %SPECIFIC ONLY TO JAC DESKTOP RIGHT NOW
-load('C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\stim_28_29.mat')
+%load('C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\stim_28_29.mat')
 
 %SPECIFIC ONLY TO JAC Laptop RIGHT NOW
 % load('/Users/jcronin/Desktop/Data/3f2113/1sBefore1safter/stim_constantV26_31.mat')
@@ -207,6 +207,10 @@ plotSignificantCCEPsMap(sig,t,stim_chans,sigCCEPs, 'yes');
 % accordingly
 sigL = squeeze(dataEpochedHigh(:,idx,:));
 
+% 9 -17-2016 - plotIt_timeFreq added
+
+plotIt_timeFreq = true;
+
 for i = 1:size(sigL,2)
     
     if strcmp(filter_it,'y')
@@ -226,9 +230,7 @@ for i = 1:size(sigL,2)
     legend({'pre','high'})
     % do some time frequency analysis
     figure
-    timeFrequencyAnalWavelet(sig_pre,sig_postL,t_pre,t_post,fs_data)
-    
-    
+   [t_post,fw,ncPost] = timeFrequencyAnalWavelet(sig_pre,sig_postL,t_pre,t_post,fs_data,plotIt_timeFreq);
     
 end
 
