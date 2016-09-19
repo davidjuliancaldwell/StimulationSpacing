@@ -11,11 +11,11 @@ allStimPairs = true;
 addpath(genpath(pwd))
 
 %SPECIFIC ONLY TO DJC DESKTOP RIGHT NOW
-% filePath = 'C:\Users\djcald\Google Drive\GRIDLabDavidShared\CSNE YSP2016\1sBefore1safter\'; 
+filePath = 'C:\Users\djcald\Google Drive\GRIDLabDavidShared\CSNE YSP 2016\1sBefore1safter\'; 
 % filePath = 'C:\Users\djcald\GoogleDrive\GRIDLabDavidShared\20f8a3\StimulationSpacingChunked\';
 
 %SPECIFIC ONLY TO JAC DESKTOP RIGHT NOW
-filePath = 'C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\';
+%filePath = 'C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\';
 
 %SPECIFIC ONLY TO JAC Laptop RIGHT NOW
 % filePath = '/Users/jcronin/Desktop/Data/3f2113/1sBefore1safter/';
@@ -26,7 +26,7 @@ end
 
 %% Start building the data matrices to SVD
 % post stim time window
-post_begin = 5;
+post_begin = 10; % try 10, rather than 5 DJC
 post_end = (450+post_begin);
 
 % Build the local and global data matrices
@@ -81,13 +81,13 @@ else
     goods(unique(allStimChans)) = 0;
     goods = logical(goods);
     
-%     X_forSVD = X(goods,:);
-%     X_k_forSVD = X_k(goods,:,:);
+     X_forSVD = X(goods,:);
+     X_k_forSVD = X_k(goods,:,:);
 
     % Or try keeping all channels
-    X_forSVD = X;
-    X_k_forSVD = X_k;
-    goods = ones(size(X,1),1);
+%     X_forSVD = X;
+%     X_k_forSVD = X_k;
+%     goods = ones(size(X,1),1);
 end
 
 %% SVD of the local matrices
@@ -123,6 +123,7 @@ for pairs=1:length(fileToLoad)
         ind=1;
         for i=modes
             a(ind) = uG(:,i).'*uL(:,i,ii+(pairs-1)*size(dataEpochedHigh,3));
+            a_mat(pairs,ii,1:3) = a;
             ind=ind+1;
         end
         scatter3(a(1),a(2),a(3), [], [0.0 gcolor 1.0],'filled')

@@ -47,11 +47,12 @@ numChans = 1:size(dataEpoched,2);
 %%
 
 % pre time window
-pre_begin = -450;
+% try making smaller for wavelet 9-18-2016
+pre_begin = -250;
 pre_end = 0;
 % post time window
-post_begin = 5;
-post_end = (450+post_begin);
+post_begin = 8;
+post_end = (250+post_begin);
 
 % extract pre
 t_pre = t(t<pre_end & t>pre_begin);
@@ -62,14 +63,17 @@ t_post = t(t>post_begin & t<post_end);
 filter_it = 'y';
 plotIt = false;
 
-signal = dataEpochedHigh(:,goods,:);
+signal = dataEpochedHigh;
 
-% pre initialize 
+% pre initialize
 chans = numChans(goods);
+freqs = [1:3:200];
+numFreqs = length(freqs);
 
-ncPost_m = zeros(200,length(t_post),length(chans),size(dataEpochedHigh,3));
 
-for i = numChans(goods)
+ncPost_m = zeros(numFreqs,length(t_post),length(chans),size(dataEpochedHigh,3));
+
+for i = chans
     
     sig = squeeze(signal(:,i,:));
     
@@ -94,12 +98,59 @@ for i = numChans(goods)
         end
         % do some time frequency analysis
         
-        if plotIt == true     
+        if plotIt == true
             figure
         end
         
         [t_post,fw,ncPost] = timeFrequencyAnalWavelet(sig_pre,sig_postL,t_pre,t_post,fs_data,plotIt);
-        ncPost_m(:,:,j,i) = ncPost;
+        ncPost_m(:,:,i,j) = ncPost;
         
     end
 end
+
+%% once have ncPost_m, stack it, SVD it, etc
+
+goods = ones(size(ncPost_m,3),1);
+goods(badChans) = 0;
+goods(65:end) = 0; % Only look at the grid for now
+goods = logical(goods);
+chansToStack = goods;
+
+dataStacked_timeFreq = dataStack_timeFreq(ncPost_m,t,post_begin,post_end,chansToStack,[],[],badChans,fs_data,fw,t_post);
+
+[u,s,v] = svd(dataStacked_timeFreq','econ');
+
+%%
+figure
+plot(diag(s),'ko','Linewidth',[2])
+% to get percentage in mode
+subplot(2,1,1) % plot normal
+plot(diag(s)/sum(diag(s)),'ko','Linewidth',[2])
+title('singular values, fractions')
+set(gca,'fontsize',14)
+
+subplot(2,1,2) % plot semilog
+semilogy(diag(s)/sum(diag(s)),'ko','Linewidth',[2])
+title('singular values, fractions, semilog plot')
+set(gca,'fontsize',14)
+%%
+% reshape and plot modes
+% set colormap using cbrewer
+CT = cbrewer('div','RdBu',11);
+
+% flip it so red is increase, blue is down
+CT = flipud(CT);
+figure
+modes = [1:3];
+numSubs = length(modes);
+for i=1:length(modes)
+    subplot(numSubs,1,i)
+    imagesc(t_post,fw,(reshape(v(1:length(v)/10,modes(i)),[length(fw) length(t_post)]))); axis xy
+    title(['Temporal portion of mode #: ', num2str(modes(i))])
+    xlabel('Time in ms')
+    ylabel('Frequency (Hz)')
+    colorbar
+     colormap(CT);
+end
+
+

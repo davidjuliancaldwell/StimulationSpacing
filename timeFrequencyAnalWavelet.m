@@ -1,7 +1,8 @@
 function [t_post,fw,nCPost] = timeFrequencyAnalWavelet(pre,post,t_pre,t_post,fs_data,plotIt)
 
 % frequencies to look at, resolution in middle ( 1 Hz bins now)
-fw = [1:1:200];
+% try 3 Hz bins to prevent crashing
+fw = [1:3:200];
 % post and pre wavelet business
 [~,~,Cpost,~] = time_frequency_wavelet(post,fw,fs_data,0,1,'CPUtest');
 [~,~,Cpre,~] = time_frequency_wavelet(pre,fw,fs_data,0,1,'CPUtest');
