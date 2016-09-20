@@ -81,7 +81,7 @@ imagesc(t_post, fw, squeeze(examp_reshape(:,:,1))); axis xy
 xlabel('Time in ms')
 ylabel('Frequency (Hz)')
 colorbar
-title('Wavelet analysis for Post Stim - Normalized to Pre')
+title(['Wavelet analysis for Post Stim - Normalized to Pre - Channel ' num2str(idx)])
 colormap(CT);
 set_colormap_threshold(gcf, [-1 1], [-10 10], [.5 .5 .5])
 
