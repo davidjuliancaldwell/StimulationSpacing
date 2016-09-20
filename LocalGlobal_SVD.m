@@ -21,10 +21,10 @@ addpath(genpath(pwd))
 % filePath = 'C:\Users\djcald\GoogleDrive\GRIDLabDavidShared\20f8a3\StimulationSpacingChunked\';
 
 %SPECIFIC ONLY TO JAC DESKTOP RIGHT NOW
-filePath = 'C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\';
+% filePath = 'C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\';
 
 %SPECIFIC ONLY TO JAC Laptop RIGHT NOW
-% filePath = '/Users/jcronin/Desktop/Data/3f2113/1sBefore1safter/';
+filePath = '/Users/jcronin/Desktop/Data/3f2113/1sBefore1safter/';
 
 if ~allStimPairs
     load([filePath, fileName, '.mat'])
@@ -213,6 +213,7 @@ end
 [uG, sG, vG] = svd(X_forSVD, 'econ');
 beta = size(X_forSVD, 1)/size(X_forSVD,2);
 coef_G = optimal_SVHT_coef(beta, sigma_known);
+
 
 modes=1:5;
 SVDplot(uG, sG, vG, false, [], modes, coef_G)

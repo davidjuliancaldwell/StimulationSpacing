@@ -2,17 +2,21 @@ function [] = SVDplot(u,s,v, fullData, goods, modes, coef_S_truncation)
 
 %% Plot the singular values
 figure
-plot(diag(s),'ko','Linewidth',[2])
-% to get percentage in mode
-subplot(2,1,1) % plot normal
-plot(diag(s)/sum(diag(s)),'ko','Linewidth',[2])
-title('singular values, fractions')
-set(gca,'fontsize',14)
-if exist('coef_S_truncation', 'var')
+if ~exist('coef_S_truncation', 'var')
+    plot(diag(s),'ko','Linewidth',[2])
+    % to get percentage in mode
+    subplot(2,1,1) % plot normal
+    plot(diag(s)/sum(diag(s)),'ko','Linewidth',[2])
+    title('singular values, fractions')
+else
+    subplot(2,1,1) % plot normal
+    plot(diag(s),'ko','Linewidth',[2])
     hold on
     subplot(2,1,1)
     plot([0 length(s)], [coef_S_truncation coef_S_truncation], 'r')
+    title(['singular values with truncation coef = ', num2str(coef_S_truncation)])
 end
+set(gca,'fontsize',14)
 
 subplot(2,1,2) % plot semilog
 semilogy(diag(s)/sum(diag(s)),'ko','Linewidth',[2])
