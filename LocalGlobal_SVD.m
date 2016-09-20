@@ -5,7 +5,7 @@ close all, clear all, clc
 % Or set allStimPairs to true;
 fileName = 'stim_12_52';
 
-allStimPairs = false;
+allStimPairs = true;
 includeLowMed = false; % make true if you want to include the low and medium pulses in addition to the high pulses
 
 % Set how the data will be organized:
@@ -21,10 +21,10 @@ addpath(genpath(pwd))
 % filePath = 'C:\Users\djcald\GoogleDrive\GRIDLabDavidShared\20f8a3\StimulationSpacingChunked\';
 
 %SPECIFIC ONLY TO JAC DESKTOP RIGHT NOW
-% filePath = 'C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\';
+filePath = 'C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\';
 
 %SPECIFIC ONLY TO JAC Laptop RIGHT NOW
-filePath = '/Users/jcronin/Desktop/Data/3f2113/1sBefore1safter/';
+% filePath = '/Users/jcronin/Desktop/Data/3f2113/1sBefore1safter/';
 
 if ~allStimPairs
     load([filePath, fileName, '.mat'])
@@ -339,4 +339,60 @@ ylabel(['Mode ' num2str(modes(2))])
 zlabel(['Mode ' num2str(modes(3))])
 legend(labels)
 
+%% Reconstruction with the number of modes that singular value threshold tells us to use
+rG = sum(diag(sG)>thresh_G);
 
+global_R=uG(:,1:rG)*sG(1:rG, 1:rG)*vG(:,1:rG)';
+
+% Add rows back in for the removed stim channels, so that we have 64 channels total
+temp = zeros(64, size(global_R,2));
+temp(goods',:) = global_R;
+global_R = temp;
+
+% Reshape global_R into the responses to individual stims
+if matrixOrg==1
+    if ~exist('numPulsesTOTAL', 'var')
+        numPulsesTOTAL = numPulses;
+    end
+    if ~exist('allStimChans', 'var')
+        allStimChans = stim_chans;
+    end
+    global_R_byResponse = reshape(global_R, [size(global_R,1), size(X,2)/numPulsesTOTAL, numPulsesTOTAL]);
+end
+
+% Plot them - choose which response you want to look at
+responseNum = 3;
+% Don't reshape, want: time*channels
+plotSignificantCCEPsMap(global_R_byResponse(:,:,responseNum)', t(t>post_begin & t<post_end), allStimChans, [], 'no');
+title(['reconstructed with rank = ', num2str(rG), '; response #', num2str(responseNum)])
+
+%% Plot by averaging over a given stim pair 
+% stimPairs = {'4_60', '12_52', '20_44' '25_32' '26_31' '27_30' '28_29' '28_36'};
+
+responseNum = 11:20;
+% Don't reshape, want: time*channels*epochs
+plotSignificantCCEPsMap(permute(global_R_byResponse(:,:,responseNum), [2,1,3]), t(t>post_begin & t<post_end), allStimChans, [], 'no');
+title(['reconstructed with rank = ', num2str(rG), '; averaged for a given stim pair'])
+
+%% Plot just one channel's response
+responseNum = 61;
+chan = 21;
+figure
+% plot(t(t>post_begin & t<post_end), global_R_byResponse(chan,:,responseNum))
+% plot(global_R_byResponse(chan,:,responseNum))
+plot(mean(global_R_byResponse(chan,:,11:20),3))
+hold on
+plot(mean(X_k(chan,:,11:20),3),'r')
+title(['reconstructed with rank = ', num2str(rG), '; ch #', num2str(chan), ', response #', num2str(responseNum)])
+legend('rank recon.', 'original')
+
+%% Or loop through the display of the responses: - this doesn't work right now
+figure
+hold off
+for i=1:size(X_k_forSVD, 3)
+    responseNum = i;
+    plotSignificantCCEPsMap(global_R_byResponse(:,:,responseNum)', t(t>post_begin & t<post_end), allStimChans, [], 'no');
+    title(['reconstructed with rank = ', num2str(rG), '; response #', num2str(i)])
+    pause(0.1)
+    hold off
+end
