@@ -179,16 +179,16 @@ if ~allStimPairs
         colormap(CT);
     end
     
-    
-    X = dataStack(dataEpochedHigh,t,post_begin,post_end,chansToStack,[],[],[],fs_data,filter_it)';
-    
-    
-    X_k = reshape(X, [size(X,1), size(X,2)/size(dataEpochedHigh, 3), size(dataEpochedHigh, 3)]);
-    X_forSVD = X;
-    X_k_forSVD = X_k;
-    fileToLoad = 1; % Just need to know for later purposes that you only loaded in one file
-    
-    
+%     
+%     X = dataStack(dataEpochedHigh,t,post_begin,post_end,chansToStack,[],[],[],fs_data,filter_it)';
+%     
+%     
+%     X_k = reshape(X, [size(X,1), size(X,2)/size(dataEpochedHigh, 3), size(dataEpochedHigh, 3)]);
+%     X_forSVD = X;
+%     X_k_forSVD = X_k;
+%     fileToLoad = 1; % Just need to know for later purposes that you only loaded in one file
+%     
+%     
     % if ~allStimPairs
     %     % Disregard bad channels
     %     prompt = {'what is the list of channels to IGNORE? e.g. 1:8,12 '};
