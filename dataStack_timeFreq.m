@@ -27,9 +27,6 @@ if(~exist('channelsOfInt','var'))
     channelsOfInt = [1:numChans];
 end
 
-
-
-
 % reshift the data so we can do a vector operation to stack all of it like
 % we did for that one example
 
