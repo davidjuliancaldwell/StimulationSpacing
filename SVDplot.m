@@ -1,4 +1,4 @@
-function [] = SVDplot(u,s,v, fullData, goods, modes)
+function [] = SVDplot(u,s,v, fullData, goods, modes, coef_S_truncation)
 
 %% Plot the singular values
 figure
@@ -8,6 +8,11 @@ subplot(2,1,1) % plot normal
 plot(diag(s)/sum(diag(s)),'ko','Linewidth',[2])
 title('singular values, fractions')
 set(gca,'fontsize',14)
+if exist('coef_S_truncation', 'var')
+    hold on
+    subplot(2,1,1)
+    plot([0 length(s)], [coef_S_truncation coef_S_truncation], 'r')
+end
 
 subplot(2,1,2) % plot semilog
 semilogy(diag(s)/sum(diag(s)),'ko','Linewidth',[2])

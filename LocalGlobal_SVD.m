@@ -200,15 +200,22 @@ uL=zeros(size(X_k_forSVD,1), size(X_k_forSVD,1), size(X_k_forSVD,3));
 sL=zeros(size(uL));
 vL=zeros(size(X_k_forSVD,2), size(X_k_forSVD,1), size(X_k_forSVD,3));
 
+sigma_known = 0; % We don't know the noise in our system
+coef_L = zeros(1,size(X_k,3));
+
 for i=1:size(X_k,3)
     [uL(:,:,i), sL(:,:,i), vL(:,:,i)] = svd(X_k_forSVD(:,:,i),'econ');
+    beta = size(X_k_forSVD, 1)/size(X_k_forSVD,2); % B=m/n of the matrix to be denoised
+    coef_L(i) = optimal_SVHT_coef(beta, sigma_known);
 end
 
 % SVD of the global matrix
 [uG, sG, vG] = svd(X_forSVD, 'econ');
+beta = size(X_forSVD, 1)/size(X_forSVD,2);
+coef_G = optimal_SVHT_coef(beta, sigma_known);
 
 modes=1:5;
-SVDplot(uG, sG, vG, false, [], modes)
+SVDplot(uG, sG, vG, false, [], modes, coef_G)
 
 
 %% Plot projections
@@ -330,3 +337,5 @@ xlabel(['Mode ' num2str(modes(1))])
 ylabel(['Mode ' num2str(modes(2))])
 zlabel(['Mode ' num2str(modes(3))])
 legend(labels)
+
+
