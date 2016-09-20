@@ -61,12 +61,19 @@ if ~allStimPairs
     filter_it = 'y';
     plotIt = false;
     
-    
+    %%
     % z-score threshold
     % ui box for input - pick zscore threshold
     
     if strcmp(sigCCEPusage,'y')
-        sigCCEPs = sigCCEP_extract(dataEpochedHigh,t,pre_begin,pre_end,post_begin,post_end,fs_data,filter_it,[]);
+        % pre time window
+        pre_beginSig = -450;
+        pre_endSig = 0;
+        % post time window
+        post_beginSig = 5;
+        post_endSig = (450+post_beginSig);
+        
+        sigCCEPs = sigCCEP_extract(dataEpochedHigh,t,pre_beginSig,pre_endSig,post_beginSig,post_endSig,fs_data,filter_it,[]);
     end
     
     
@@ -107,7 +114,7 @@ if ~allStimPairs
     diag(s);
     
     % this is the singular value cutoff
-    coeffs = optimal_SVHT_coef(m/n,0);
+    coef_S_truncation = optimal_SVHT_coef(m/n,0)*median(diag(s));
     
     %%
     figure
@@ -122,6 +129,17 @@ if ~allStimPairs
     semilogy(diag(s)/sum(diag(s)),'ko','Linewidth',[2])
     title('singular values, fractions, semilog plot')
     set(gca,'fontsize',14)
+    
+    if exist('coef_S_truncation', 'var')
+        figure
+        
+        plot(diag(s),'ko','Linewidth',[2])
+        hold on
+        
+        plot([0 length(s)], [coef_S_truncation coef_S_truncation], 'r')
+        title('singular values and cutoff')
+        
+    end
     %%
     % reshape and plot modes
     % set colormap using cbrewer
