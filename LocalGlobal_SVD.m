@@ -5,13 +5,13 @@ close all, clear all, clc
 % Or set allStimPairs to true;
 fileName = 'stim_12_52';
 
-allStimPairs = true;
+allStimPairs = false;
 includeLowMed = false; % make true if you want to include the low and medium pulses in addition to the high pulses
 
 % Set how the data will be organized:
 % 1: good channels x responses (normal and default)
 % 2: responses x channels (or all channels for global)
-matrixOrg = 2;
+matrixOrg = 1;
 
 % to add paths to all the subfolders
 addpath(genpath(pwd))
@@ -201,22 +201,22 @@ sL=zeros(size(uL));
 vL=zeros(size(X_k_forSVD,2), size(X_k_forSVD,1), size(X_k_forSVD,3));
 
 sigma_known = 0; % We don't know the noise in our system
-coef_L = zeros(1,size(X_k,3));
+thresh_L = zeros(1,size(X_k,3));
 
 for i=1:size(X_k,3)
     [uL(:,:,i), sL(:,:,i), vL(:,:,i)] = svd(X_k_forSVD(:,:,i),'econ');
     beta = size(X_k_forSVD, 1)/size(X_k_forSVD,2); % B=m/n of the matrix to be denoised
-    coef_L(i) = optimal_SVHT_coef(beta, sigma_known);
+    thresh_L(i) = optimal_SVHT_coef(beta, sigma_known)*median(diag(sL(:,:,i)));
 end
 
 % SVD of the global matrix
 [uG, sG, vG] = svd(X_forSVD, 'econ');
 beta = size(X_forSVD, 1)/size(X_forSVD,2);
 coef_G = optimal_SVHT_coef(beta, sigma_known);
-
+thresh_G = coef_G*median(diag(sG));
 
 modes=1:5;
-SVDplot(uG, sG, vG, false, [], modes, coef_G)
+SVDplot(uG, sG, vG, false, [], modes, thresh_G)
 
 
 %% Plot projections
