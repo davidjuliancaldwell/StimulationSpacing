@@ -10,6 +10,8 @@ close all;clear all;clc
 % DJC desktop
 
 load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\CSNE YSP 2016\1sBefore1safter\stim_12_52.mat')
+%load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\CSNE YSP 2016\1sBefore1safter\stim_28_29.mat')
+
 
 %%
 % extract data of interest 
@@ -69,6 +71,7 @@ data_permuted  = permute(dataIntTime,[1,3,2]);
 data_stacked = reshape(data_permuted,[size(data_permuted,1)*size(data_permuted,2),size(data_permuted,3)]);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%channelInt = 21;
 channelInt = 58;
 
 figure
@@ -343,7 +346,7 @@ end
 subtracted_sig_cellS_I = {};
 
 % try 8 for 1000, 6 for 100 scale factor, 4 for 10 scale factor
-num_modes_subtract = 8;
+num_modes_subtract = 10;
 subtracted_sig_matrixS_I = [];
 
 for i = 1:size(dataIntTime,3)
@@ -519,7 +522,7 @@ if(exist('goodChans','var'))
     dataTrim = data(:,goods);
 end
 
-
+dataTrim = data_stacked;
 % transpose data
 dataSVD = dataTrim';
 % data needs to be in m x n form, where m is the number of channels, and n
@@ -528,7 +531,6 @@ dataSVD = dataTrim';
 [u,s,v] = svd(dataSVD,'econ');
 
 % SVD
-[u,s,v] = svd(subtracted_sig_ICA','econ');
 
 % look at temporal part - columns of v - indivividually and together
 figure
@@ -565,10 +567,23 @@ m = size(dataSVD,1);
 n = size(dataSVD,2);
 
 % this y is just the singular values sorted
-y = svd(dataSVD,'econ');
+%y = svd(dataSVD,'econ');
 
 % this is the singular value cutoff 
-coeffs = optimal_SVHT_coef(m/n,0);
+Y = dataSVD;
+
+[U D V] = svd(dataSVD,'econ'); 
+y = diag(D); 
+
+cut_off = (optimal_SVHT_coef(m/n,0) * median(y));
+
+figure
+plot(diag(D),'o')
+hold on
+hline(cut_off)
+
+%y( y < (optimal_SVHT_coef(m/n,0) * median(y)) ) = 0; 
+%Xhat = U * diag(y) * V';
 
 
 % denoised matrix 
