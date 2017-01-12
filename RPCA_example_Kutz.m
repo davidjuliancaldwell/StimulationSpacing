@@ -15,6 +15,7 @@ t=linspace(0,10,30);
 usol=sech(X).*(1-0.5*cos(2*T))+(sech(X).*tanh(X)).*(1-0.5*sin(2*T));
 figure(1)
 subplot(2,2,1), waterfall(x,t,abs(usol)); colormap([0 0 0]); title('ideal data')
+xlabel('x'), ylabel('t'), zlabel('|u|')
 
 % randintrlv is used to produce noise spikes (60 spikes in total) in
 % certain matrix/pixel locations, thus corrupting the data matrix
@@ -114,7 +115,12 @@ end
 subplot(2,2,1), title(['low-rank approximation  from robust PCA;' ' rank= ' num2str(2)])
 
 %% What happens when you change lambda
-lambda=0.5; 
+% As lambda goes to unity, the low-rank matrix picks up the entire initial
+% data matrix, while the sparse matrix contains nothing
+% As lambda goes to zero, the low-rank matrix contains nothing while the
+% sparse matrix contains virtually the entire original matrix
+
+lambda=0.02; 
 
 % low-rank (R1) and sparse (R2) portions
 [R1r, R2r] = inexact_alm_rpca(real(ur.'),lambda);
@@ -129,7 +135,7 @@ figure(6)
 subplot(2,2,1), waterfall(x,t,abs(R1)'), colormap([0 0 0]), title(['RPCA: low-rank; lambda = ', num2str(lambda)])
 subplot(2,2,2), waterfall(x,t,abs(R2)'), colormap([0 0 0]), title(['RPCA: sparse; lambda = ', num2str(lambda)])
 
-lambda=0.8; 
+lambda=0.9; 
 
 % low-rank (R1) and sparse (R2) portions
 [R1r, R2r] = inexact_alm_rpca(real(ur.'),lambda);

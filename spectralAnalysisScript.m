@@ -14,12 +14,12 @@ addpath(genpath(pwd))
 %uiimport('-file');
 
 %SPECIFIC ONLY TO DJC DESKTOP RIGHT NOW
-load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\CSNE YSP 2016\1sBefore1safter\stim_12_52.mat')
+% load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\CSNE YSP 2016\1sBefore1safter\stim_12_52.mat')
 
 % load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\20f8a3\StimulationSpacingChunked\stim_17_24.mat')
 
 %SPECIFIC ONLY TO JAC DESKTOP RIGHT NOW
-%load('C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\stim_28_29.mat')
+load('C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\stim_28_29.mat')
 
 %SPECIFIC ONLY TO JAC Laptop RIGHT NOW
 % load('/Users/jcronin/Desktop/Data/3f2113/1sBefore1safter/stim_constantV26_31.mat')
@@ -498,7 +498,7 @@ plotSignificantCCEPsMap(sig, (0:size(dataR_withStim,2)-1)/fs_data*1000, stim_cha
 % So what we already did isn't in the correct format for the global mode,
 % so first build the local X_k's and the global X
 
-X(:,:,1) = 
+% X(:,:,1) = 
 
 
 % Now calculate some 'local' modes
