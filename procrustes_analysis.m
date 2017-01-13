@@ -183,7 +183,7 @@ end
 
 
 %% this is from ICA prototype
-%% single trial scaled - BEST THUS FAR
+% single trial scaled - BEST THUS FAR
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -208,18 +208,58 @@ end
 %% visualize the trial by trial ICA components
 
 %
-% numInt = min(size(icasig_temp,1),10);
-%
-% for j = 1:size(dataIntTime,3)
-%     figure
-%     for i = 1:numInt
-%         subplot(numInt,1,i)
-%         plot(i_icasigS{j}(i,:))
-%         title(['ICA component # , ', num2str(i)])
-%     end
-%     subtitle(['Trial # ', num2str(j)])
-%
-% end
+numInt = min(size(icasig_temp,1),10);
+
+for j = 1:size(dataIntTime,3)
+    figure
+    for i = 1:numInt
+        subplot(numInt,1,i)
+        plot(i_icasigS{j}(i,:))
+        title(['ICA component # , ', num2str(i)])
+    end
+    subtitle(['Trial # ', num2str(j)])
+    
+end
+
+%% extract ICA components that are like the artifact (they occur near a certain time and have prominence)
+
+% need to adjust this for case where it's close to zero but not quite
+% equal?
+loc_0 = find(timeVec==0)/fs_data;
+
+numTrials = size(dataIntTime,3);
+
+i_ica_kept = {};
+i_ica_mix_kept = {};
+
+numComponentsSearch = 15;
+
+% figure
+% hold on
+
+for i = 1:numTrials
+    start_index = 1;
+    
+    for j = 1:numComponentsSearch
+        % have to tune this
+        [pk_temp_pos,locs_temp_pos] = findpeaks(i_icasigS{i}(j,:),fs_data,'MinPeakProminence',15);
+        [pk_temp_neg,locs_temp_neg] = findpeaks(-1*i_icasigS{i}(j,:),fs_data,'MinPeakProminence',15);
+        
+        
+%         findpeaks(-1*i_icasigS{i}(j,:),fs_data,'MinPeakProminence',20)  
+%         findpeaks(i_icasigS{i}(j,:),fs_data,'MinPeakProminence',20)
+%         
+        if ((abs(locs_temp_pos-loc_0)<0.005) | abs(locs_temp_neg-loc_0)<0.005)
+            i_ica_kept{i}(start_index,:) = i_icasigS{i}(j,:);
+            i_ica_mix_kept{i}(:,start_index) = i_mixing_matS{i}(:,j);
+            start_index = start_index + 1;
+        end
+    end
+    
+    
+end
+
+
 
 %% subtract each one of these components
 
@@ -229,10 +269,12 @@ subtracted_sig_cellS_I = {};
 num_modes_subtract = 10;
 subtracted_sig_matrixS_I = [];
 
-for i = 1:size(dataIntTime,3)
+for i = 1:numTrials
     
     
-    combined_ica_recon = (i_mixing_matS{i}(:,1:num_modes_subtract)*i_icasigS{i}(1:num_modes_subtract,:))';
+    combined_ica_recon = (i_ica_mix_kept{i}*i_ica_kept{i})';
+    
+    num_modes_kept = size(i_ica_kept{i},1);
     
     % subtracted_sig_ICA_temp = dataIntTime(:,:,i) - combined_ica_recon./scale_factor;
     subtracted_sig_ICA_temp = dataIntTime(:,:,i) - combined_ica_recon./scale_factor;
@@ -240,19 +282,37 @@ for i = 1:size(dataIntTime,3)
     subtracted_sig_cellS_I{i} = subtracted_sig_ICA_temp;
     subtracted_sig_matrixS_I(:,:,i) = subtracted_sig_ICA_temp;
     
-    %     figure
-    %     plot(subtracted_sig_ICA_temp(:,channelInt))
-    %     hold on
-    %     plot(dataIntTime(:,channelInt,i))
-    %     title(['Channel ', num2str(channelInt), ' Trial ', num2str(i), 'Number of ICA modes subtracted = ', num2str(num_modes_subtract)])
-    %     legend({'subtracted signal','original signal'})
-    %
-    %     figure
-    %     plot(subtracted_sig_ICA_temp(:,channelInt))
-    %     title(['Subtracted Signal for ', num2str(num_modes_subtract), ' ICA modes, Channel ', num2str(channelInt), ' Trial ', num2str(i)])
+    figure
+    plot(timeVec,1e6*subtracted_sig_ICA_temp(:,channelInt),'LineWidth',2)
+    hold on
+    plot(timeVec,1e6*dataIntTime(:,channelInt,i),'LineWidth',2)
+    title(['Channel ', num2str(channelInt), ' Trial ', num2str(i), ' Number of ICA modes subtracted = ', num2str(num_modes_kept)])
+    legend({'subtracted signal','original signal'})
+    ylabel(['Signal \muV'])
+    xlabel(['Time (ms)'])
+    set(gca,'Fontsize',[14]),
+
+    figure
+    plot(timeVec,1e6*subtracted_sig_ICA_temp(:,channelInt),'LineWidth',2)
+    title(['Subtracted Signal for ', num2str(num_modes_kept), ' ICA modes, Channel ', num2str(channelInt), ' Trial ', num2str(i)])
+    ylabel(['Signal \muV'])
+    xlabel(['Time (ms)'])
+    set(gca,'Fontsize',[14]),
+
     %
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% DJC 1-12-2017 - for UWIN
+
+%     figure
+%     plot(timeVec,1e6*subtracted_sig_ICA_temp(:,channelInt),'LineWidth',2)
+%     hold on
+%     plot(timeVec,1e6*dataIntTime(:,channelInt,i),'LineWidth',2)
+%     legend({'subtracted signal','original signal'})
+%     ylabel(['Signal \muV'])
+%     xlabel(['Time (ms)'])
+%     set(gca,'Fontsize',[14]),
 
 %% procrustes
 
@@ -266,7 +326,7 @@ procrustes_mat = zeros(size(artifact));
 %[d,Z,transform] = procrustes(X,Y); % also returns the transformation that maps Y to Z. transform is a structure array with fields:
 %%
 % channel by channel, trial by trial
-for i = 1:size(artifact,3)
+for i = 1:numTrials
     
     data_temp = squeeze(data_orig(:,:,i));
     artifact_temp = squeeze(artifact(:,:,i));
@@ -289,6 +349,40 @@ for i = 1:size(artifact,3)
     end
     
 end
+
+%% plot procrustes values
+figure
+hold on
+numChans = size(d_mat,1);
+
+for i = 1:numTrials
+    
+    scatter(repmat(i,size(d_mat,1),1),d_mat(:,i))
+    
+end
+xlabel(['Trial Number'])
+ylabel(['Procrustes goodness of fit'])
+title(['Procrustes Distance Metric for Artifact vs. Original Signal'])
+sprintf('Average procrustes GOF for each trial')
+average_proc_trial = mean(d_mat,1)
+
+
+figure
+hold on 
+for i = 1:numChans
+    
+    scatter(repmat(i,size(d_mat,2),1),d_mat(i,:))
+    
+end
+xlabel(['Channel Number'])
+ylabel(['Procrustes goodness of fit'])
+title(['Procrustes Distance Metric for Artifact vs. Original Signal'])
+sprintf('Average procrustes GOF for each channel')
+
+average_proc_channel = mean(d_mat,2)
+
+a = d_mat(:);
+
 
 
 %% trial by trial, all channels at once procrustes
