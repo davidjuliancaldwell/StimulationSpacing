@@ -102,7 +102,8 @@ if plotIt
     ylabel(['Procrustes goodness of fit'])
     title(['Procrustes Distance Metric for Artifact vs. Original Signal'])
     sprintf('Average procrustes GOF for each trial')
-    
+    set(gca,'fontsize',14)
+
     average_proc_trial = nanmean(d_mat,1);
     for j = 1:numTrials 
     fprintf('Average procrustes GOF for trial # %d = %0.4f\n',j,average_proc_trial(j))
@@ -118,7 +119,8 @@ if plotIt
     xlabel(['Channel Number'])
     ylabel(['Procrustes goodness of fit'])
     title(['Procrustes Distance Metric for Artifact vs. Original Signal'])
-    
+    set(gca,'fontsize',14)
+
     average_proc_channel = nanmean(d_mat,2);
     for j = 1:numChans
     fprintf('Average procrustes GOF for channel # %d = %0.4f\n',j,average_proc_channel(j))
