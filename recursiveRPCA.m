@@ -18,7 +18,7 @@ data(:,:,1) = squeeze(dataEpochedHigh(:, goodChans, 1))';
 
 
 %% Recursively run the robust PCA:
-iters = 10; % number of recursive iterations - DETERMINE THRU DATA!!
+iters = 1000; % number of recursive iterations - DETERMINE THRU DATA!!
 rng(12345) % set random number seed, so that this is repeatable 
 
 for count=1:iters
@@ -31,7 +31,7 @@ for count=1:iters
     end
     
     % Apply robust PCA
-    lambda = 0.05;
+    lambda = 0.11;
     [R1, R2] = singleRPCA(dataShifted, lambda, -1, -1, false);
     
     % Unshift the low-rank matrix, which will then be used recursively for
@@ -155,6 +155,85 @@ legend('First low-rank matrix','Last low-rank matrix')
 title(['First and last low-rank matrices, Ch. ', num2str(chan_interest)])
 ylabel('ECoG (V)')
 xlabel('time (ms)')
+
+%% Procrustes values
+d = zeros(1, size(data,1));
+for i=1:size(data, 1)
+    [d(i),Z,transform] = procrustes(data(i,:,1)',sparse(i,:,1)');
+end
+
+%% Procrutes, like David's
+pre_procrust = -5;
+post_procrust = 40;
+
+data_orig =  dataIntTime((timeVec>pre_procrust & timeVec<post_procrust),:,:);
+
+artifact = recon_artifact_matrix((timeVec>pre_procrust & timeVec<post_procrust),:,:);
+
+procrustes_mat = zeros(size(artifact));
+
+
+% channel by channel, trial by trial
+for i = 1:numTrials
+    
+    data_temp = squeeze(data_orig(:,:,i));
+    artifact_temp = squeeze(artifact(:,:,i));
+    
+    
+    
+    for j = 1:size(artifact,2)
+        
+        data_temp_select = data_temp(:,j);
+        artifact_temp_select = artifact_temp(:,j);
+        
+        [d,Z,transform] = procrustes(data_temp_select,artifact_temp_select);
+        
+        d_mat(j,i) = d;
+        Z_mat(:,j,i) = Z;
+        
+        % transform_cell{j}{i} = transform;
+        
+        
+    end
+    
+end
+
+%% plot procrustes values
+figure
+hold on
+numChans = size(d_mat,1);
+
+for i = 1:numTrials
+    
+    scatter(repmat(i,size(d_mat,1),1),d_mat(:,i))
+    
+end
+xlabel(['Trial Number'])
+ylabel(['Procrustes goodness of fit'])
+title(['Procrustes Distance Metric for Artifact vs. Original Signal'])
+sprintf('Average procrustes GOF for each trial')
+average_proc_trial = mean(d_mat,1)
+
+
+figure
+hold on 
+for i = 1:numChans
+    
+    scatter(repmat(i,size(d_mat,2),1),d_mat(i,:))
+    
+end
+xlabel(['Channel Number'])
+ylabel(['Procrustes goodness of fit'])
+title(['Procrustes Distance Metric for Artifact vs. Original Signal'])
+sprintf('Average procrustes GOF for each channel')
+
+average_proc_channel = mean(d_mat,2)
+
+a = d_mat(:);
+
+
+
+
 
 %% Plot the shifted data
 % figure
