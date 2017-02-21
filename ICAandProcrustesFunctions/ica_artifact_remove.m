@@ -115,11 +115,16 @@ if plotIt
     for j = 1:size(dataIntTime,3)
         figure
         for i = 1:numInt
-            subplot(numInt,1,i)
-            plot(i_icasigS{j}(i,:))
-            title(['ICA component # , ', num2str(i)])
+           sh(i)= subplot(numInt,1,i)
+            plot(t,i_icasigS{j}(i,:))
+            title(['ICA component # ', num2str(i)])
+            set(gca,'fontsize',14)
+            
         end
-        subtitle(['Trial # ', num2str(j)])
+        linkaxes(sh,'xy')
+        xlabel('Time (ms')
+
+        %subtitle(['Trial # ', num2str(j)])
         
     end
 end
@@ -151,7 +156,7 @@ for i = 1:numTrials
         %         findpeaks(-1*i_icasigS{i}(j,:),fs_data,'MinPeakProminence',20)
         %         findpeaks(i_icasigS{i}(j,:),fs_data,'MinPeakProminence',20)
         %
-        if ((abs(locs_temp_pos-loc_0)<0.005) | abs(locs_temp_neg-loc_0)<0.005)
+        if (abs(locs_temp_pos-loc_0)<0.005 | abs(locs_temp_neg-loc_0)<0.005)
             i_ica_kept{i}(start_index,:) = i_icasigS{i}(j,:);
             i_ica_mix_kept{i}(:,start_index) = i_mixing_matS{i}(:,j);
             start_index = start_index + 1;
@@ -187,9 +192,9 @@ for i = 1:numTrials
     
     if plotIt
         figure
-        plot(recon_artifact_temp(:,channelInt))
+        plot(total_art(:,channelInt))
         hold on
-        plot(dataIntTime(:,channelInt,i))
+        plot(data((tTotal>=pre & tTotal<=post),channelInt,i))
         title(['Channel ', num2str(channelInt), ' Trial ', num2str(i), 'Number of ICA modes kept = ', num2str(num_modes_kept)])
         legend({'recon artifact','original signal'})
     end
@@ -222,9 +227,9 @@ for i = 1:numTrials
     
     if plotIt
         figure
-        plot(t,1e6*subtracted_sig_ICA_temp(:,channelInt),'LineWidth',2)
+        plot(t,1e6*total_sig(:,channelInt),'LineWidth',2)
         hold on
-        plot(t,1e6*dataIntTime(:,channelInt,i),'LineWidth',2)
+        plot(t,1e6*data((tTotal>=pre & tTotal<=post),channelInt,i),'LineWidth',2)
         title(['Channel ', num2str(channelInt), ' Trial ', num2str(i), ' Number of ICA modes subtracted = ', num2str(num_modes_kept)])
         legend({'subtracted signal','original signal'})
         ylabel(['Signal \muV'])
@@ -232,7 +237,7 @@ for i = 1:numTrials
         set(gca,'Fontsize',[14]),
         
         figure
-        plot(t,1e6*subtracted_sig_ICA_temp(:,channelInt),'LineWidth',2)
+        plot(t,1e6*total_sig(:,channelInt),'LineWidth',2)
         title(['Subtracted Signal for ', num2str(num_modes_kept), ' ICA modes, Channel ', num2str(channelInt), ' Trial ', num2str(i)])
         ylabel(['Signal \muV'])
         xlabel(['Time (ms)'])
