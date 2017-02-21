@@ -18,7 +18,7 @@ data(:,:,1) = squeeze(dataEpochedHigh(:, goodChans, 1))';
 
 
 %% Recursively run the robust PCA:
-iters = 1000; % number of recursive iterations - DETERMINE THRU DATA!!
+iters = 10; % number of recursive iterations - DETERMINE THRU DATA!!
 rng(12345) % set random number seed, so that this is repeatable 
 
 for count=1:iters
