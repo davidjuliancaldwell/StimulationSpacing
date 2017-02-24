@@ -23,7 +23,7 @@ data(:,:,1) = squeeze(dataEpochedHigh(:, goodChans, 1))';
 
 
 %% Recursively run the robust PCA:
-iters = 1; % number of recursive iterations - DETERMINE THRU DATA!!
+iters = 5; % number of recursive iterations - DETERMINE THRU DATA!!
 rng(12345) % set random number seed, so that this is repeatable 
 
 for count=1:iters
@@ -52,6 +52,11 @@ for count=1:iters
     data(:,:,count+1) = LR_Reshifted;
     dataS(:,:,count)=dataShifted;
     sparse(:,:,count) = Sp_Reshifted;
+    
+    % Procrustes analysis to update lambda
+    [d_mat,z_mat] = procrustes_metric(t_orig, t_orig, data(:,:,1)', sparse(:,:,1)', pre, post, [], plotIt);
+
+    
 end
 disp('rPCA loop finished')
 
