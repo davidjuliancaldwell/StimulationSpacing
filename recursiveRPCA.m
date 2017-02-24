@@ -18,7 +18,7 @@ data(:,:,1) = squeeze(dataEpochedHigh(:, goodChans, 1))';
 
 
 %% Recursively run the robust PCA:
-iters = 10; % number of recursive iterations - DETERMINE THRU DATA!!
+iters = 1; % number of recursive iterations - DETERMINE THRU DATA!!
 rng(12345) % set random number seed, so that this is repeatable 
 
 for count=1:iters
@@ -31,7 +31,7 @@ for count=1:iters
     end
     
     % Apply robust PCA
-    lambda = 0.11;
+    lambda = 1;
     [R1, R2] = singleRPCA(dataShifted, lambda, -1, -1, false);
     
     % Unshift the low-rank matrix, which will then be used recursively for
@@ -50,7 +50,7 @@ for count=1:iters
 end
 disp('rPCA loop finished')
 
-%% Plot data
+% Create plot data matrices
 full = 0; % Set this to 1 if you want to plot all of the data points, otherwise full=0 will just plot some data points to improve run time 
 
 if full==1
@@ -69,6 +69,7 @@ elseif full==0
     t=(0:length(data)-1)/fs_data*1000;
 end
 
+%% Plot data
 figure
 subplot(2,2,1)
 waterfall(CH, T, abs(dataPlot(:,:,1))), axis tight
