@@ -1,10 +1,14 @@
 %% Recursive rPCA
-clear all
+close all; clear all
 
 % Load data:
-load('C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\stim_12_52.mat')
-addpath('C:\Users\jcronin\Code\Matlab\Experiments\stimulation_spacing\inexact_alm_rpca')
-addpath('C:\Users\jcronin\Code\Matlab\Experiments\stimulation_spacing\inexact_alm_rpca\PROPACK')
+% load('C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\stim_12_52.mat')
+% addpath('C:\Users\jcronin\Code\Matlab\Experiments\stimulation_spacing\inexact_alm_rpca')
+% addpath('C:\Users\jcronin\Code\Matlab\Experiments\stimulation_spacing\inexact_alm_rpca\PROPACK')
+
+load('/Users/jcronin/Desktop/Data/stim_12_52.mat')
+addpath('/Users/jcronin/Desktop/Code/Experiments/stimulation_spacing/inexact_alm_rpca')
+addpath('/Users/jcronin/Desktop/Code/Experiments/stimulation_spacing/inexact_alm_rpca/PROPACK')
 
 % define stimulation channels
 stimChan1 = stim_chans(1);
@@ -12,6 +16,7 @@ stimChan2= stim_chans(2);
 goodChans = false(1,size(dataEpochedHigh,2));
 goodChans(1:64)= true;
 goodChans(stim_chans) = false;
+t_orig = t;
 
 data(:,:,1) = squeeze(dataEpochedHigh(:, goodChans, 1))';
 % dataUnshifted = data;
@@ -31,7 +36,7 @@ for count=1:iters
     end
     
     % Apply robust PCA
-    lambda = 1;
+    lambda = 0.1;
     [R1, R2] = singleRPCA(dataShifted, lambda, -1, -1, false);
     
     % Unshift the low-rank matrix, which will then be used recursively for
@@ -68,6 +73,29 @@ elseif full==0
     sparsePlot=sparse(:,1:step:end,:);
     t=(0:length(data)-1)/fs_data*1000;
 end
+
+%% Procrustes with function
+figure
+subplot(2,1,1)
+plot(t_orig, data(1,:,1)'), hold on, plot(t_orig, sparse(1,:,1))
+subplot(2,1,2)
+plot(t_orig, data(1,:,2)')
+
+plotIt = true;
+pre = -5;
+post = 40;
+
+
+data_orig = data(:,(t_orig>=pre & t_orig<=post),1);
+sparse_orig = sparse(:,(t_orig>=pre & t_orig<=post),1);
+figure
+plot(data_orig(1,:)), hold on, plot(sparse_orig(1,:))
+
+
+
+
+[d_mat,z_mat] = procrustes_metric(t_orig, t_orig, data(:,:,1)', sparse(:,:,1)', pre, post, [], plotIt);
+disp('Finished Procrustes analysis')
 
 %% Plot data
 figure
@@ -162,6 +190,7 @@ d = zeros(1, size(data,1));
 for i=1:size(data, 1)
     [d(i),Z,transform] = procrustes(data(i,:,1)',sparse(i,:,1)');
 end
+
 
 %% Procrutes, like David's
 pre_procrust = -5;
