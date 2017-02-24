@@ -69,6 +69,8 @@ mean_d_mat = mean(d_mat);
 
 figure
 scatter(lambda, mean_d_mat)
+xlabel('lambda values'), ylabel('mean procrustes value across channels')
+title('Lambda vs. mean procrustes across 62 non-stim channels')
 
 %% Create plot data matrices
 full = 0; % Set this to 1 if you want to plot all of the data points, otherwise full=0 will just plot some data points to improve run time 
