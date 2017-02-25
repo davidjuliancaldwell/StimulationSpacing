@@ -21,9 +21,10 @@ t_orig = t;
 data(:,:,1) = squeeze(dataEpochedHigh(:, goodChans, 1))';
 % dataUnshifted = data;
 
-
+global_lambda = false;
+gL = 0.11;
 %% Recursively run the robust PCA:
-iters = 10; % number of recursive iterations - DETERMINE THRU DATA!!
+iters = 1; % number of recursive iterations - DETERMINE THRU DATA!!
 rng(12345) % set random number seed, so that this is repeatable 
 thresh = 0.0001; % threshold for optimization of lambda through procrustes values
 plotIt = false;
@@ -73,12 +74,33 @@ for count=1:iters % This will loop through the number of times that you want to 
         % rank each time?)
         [d_mat,~] = procrustes_metric(t_orig, t_orig, data(:,:,count)', sparseTemp, pre, post, [], plotIt);
         mean_d_mat(ii,1) = mean(d_mat);
+
+        
+        figure
+        subplot(2,1,1)
+        data_orig = data(60,(t_orig>=pre & t_orig<=post),count);
+        sparse_orig = sparseTemp(t_orig>=pre & t_orig<=post, 60, count);
+        t_short = t_orig(t_orig>=pre & t_orig<=post);
+        plot(t_short,data_orig), hold on, plot(t_short, sparse_orig')
+        title(['Artifact, lambda = ', num2str(lambda(ii))])
+        xlabel('time (ms)')
+
+        
         
         % Procrustes on the data post stim (compare data to low rank matrix)
-        pre = 4;
+        pre = 5;
         post = 50; 
         [d_mat,~] = procrustes_metric(t_orig, t_orig, data(:,:,count)', lowRankTemp, pre, post, [], plotIt);
         mean_d_mat(ii,2) = mean(d_mat);
+        
+        subplot(2,1,2)
+        data_orig = data(60,(t_orig>=pre & t_orig<=post),count);
+        lr_orig = lowRankTemp(t_orig>=pre & t_orig<=post);
+        t_short = t_orig(t_orig>=pre & t_orig<=post);
+        plot(t_short, data_orig), hold on, plot(t_short, lr_orig')
+        title(['post stim, lambda = ', num2str(lambda(ii))])
+        xlabel('time (ms)')
+
         
         if ii>=2 % Now need to start defining new lambda values
             if ii==2
@@ -117,7 +139,12 @@ for count=1:iters % This will loop through the number of times that you want to 
     lambdaFinal(count) = lambda(min_ind);
     
     % Run rPCA
-    [R1, R2] = singleRPCA(dataShifted, lambdaFinal(count), -1, -1, false);
+    if global_lambda == true
+        L = gL;
+    else
+        L = lambdaFinal(count);
+        [R1, R2] = singleRPCA(dataShifted, L, -1, -1, false);
+    end
     
     % Unshift the low-rank matrix, which will then be used recursively for
     % another rPCA
