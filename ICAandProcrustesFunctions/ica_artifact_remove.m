@@ -115,14 +115,14 @@ if plotIt
     for j = 1:size(dataIntTime,3)
         figure
         for i = 1:numInt
-           sh(i)= subplot(numInt,1,i)
-            plot(t,i_icasigS{j}(i,:))
+           sh(i)= subplot(numInt,1,i);
+            plot(t,i_icasigS{j}(i,:),'linewidth',2)
             title(['ICA component # ', num2str(i)])
-            set(gca,'fontsize',14)
+            set(gca,'fontsize',12)
             
         end
         linkaxes(sh,'xy')
-        xlabel('Time (ms')
+        xlabel('Time (ms)')
 
         %subtitle(['Trial # ', num2str(j)])
         

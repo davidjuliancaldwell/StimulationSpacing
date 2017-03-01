@@ -34,12 +34,38 @@ post = 455;
 
 [icaMat, icaCell,artMat,artCell,tNew] =  ica_artifact_remove(t,data,bads,pre,post,fs_data,scale_factor,numComponentsSearch,plotIt,channelInt);
 
+%% plot example channel
+
+figure
+plot(tNew,1e6*squeeze(icaMat(:,60,5)),'linewidth',2)
+vline(tNew(tNew==0))
+title('Single Trial Artifact Reduction')
+xlabel('Time (ms)')
+xlim([-100 200])
+ylabel(['Voltage (\muV)'])
+set(gca,'FontSize',12)
+
+sig = squeeze(icaMat(:,60,5));
+sig_int = notch(sig,[60 120 180 240 300 360],fs_data);
+plot(tNew,1e6*sig_int,'linewidth',2)
+vline(tNew(tNew==0))
+title('Single Trial Artifact Reduction - Notch Filtered')
+xlabel('Time (ms)')
+xlim([-100 200])
+ylabel(['Voltage (\muV)'])
+set(gca,'FontSize',12)
 %% procrustes
 plotIt = true;
 
 pre = -5;
 post = 40;
 [d_mat,z_mat] = procrustes_metric(t,tNew,data,artMat,pre,post,bads,plotIt);
+
+% plot it on the brain 
+%%
+subjid = '3f2113';
+stims = bads;
+plot_procrustes_brain(subjid,d_mat,stims)
 
 %% try time frequency analysis on the data?
 
