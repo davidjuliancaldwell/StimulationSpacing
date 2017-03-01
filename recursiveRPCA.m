@@ -1,10 +1,14 @@
 %% Recursive rPCA
-clear all
+close all; clear all
 
 % Load data:
-load('C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\stim_12_52.mat')
-addpath('C:\Users\jcronin\Code\Matlab\Experiments\stimulation_spacing\inexact_alm_rpca')
-addpath('C:\Users\jcronin\Code\Matlab\Experiments\stimulation_spacing\inexact_alm_rpca\PROPACK')
+% load('C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\stim_12_52.mat')
+% addpath('C:\Users\jcronin\Code\Matlab\Experiments\stimulation_spacing\inexact_alm_rpca')
+% addpath('C:\Users\jcronin\Code\Matlab\Experiments\stimulation_spacing\inexact_alm_rpca\PROPACK')
+
+load('/Users/jcronin/Desktop/Data/stim_12_52.mat')
+addpath('/Users/jcronin/Desktop/Code/Experiments/stimulation_spacing/inexact_alm_rpca')
+addpath('/Users/jcronin/Desktop/Code/Experiments/stimulation_spacing/inexact_alm_rpca/PROPACK')
 
 % define stimulation channels
 stimChan1 = stim_chans(1);
@@ -12,17 +16,22 @@ stimChan2= stim_chans(2);
 goodChans = false(1,size(dataEpochedHigh,2));
 goodChans(1:64)= true;
 goodChans(stim_chans) = false;
+t_orig = t;
 
 data(:,:,1) = squeeze(dataEpochedHigh(:, goodChans, 1))';
 % dataUnshifted = data;
 
-
+global_lambda = false;
+gL = 0.11;
 %% Recursively run the robust PCA:
-iters = 1000; % number of recursive iterations - DETERMINE THRU DATA!!
+iters = 1; % number of recursive iterations - DETERMINE THRU DATA!!
 rng(12345) % set random number seed, so that this is repeatable 
+thresh = 0.0001; % threshold for optimization of lambda through procrustes values
+plotIt = false;
 
-for count=1:iters
-    % Shifting/offsetting the data
+for count=1:iters % This will loop through the number of times that you want to recursively run the rPCA
+    
+    % Shifting/offsetting the data for each recursive iteration:
     randShift = randi(size(data,2), [1 size(data,1)]);
     dataShifted = zeros(size(data(:,:,1)));
     for i=1:size(data,1)
@@ -30,12 +39,115 @@ for count=1:iters
         dataShifted(i,:) = temp([randShift(i):end 1:randShift(i)-1]);
     end
     
-    % Apply robust PCA
-    lambda = 0.11;
-    [R1, R2] = singleRPCA(dataShifted, lambda, -1, -1, false);
+    % Optimize lambda value
+    ii = 1;
+    lambda(1) = 0.01;
+    lambda(2) = 0.9;
+    changeProcrustes = 1;
+    
+    while changeProcrustes>thresh
+        
+        % Apply robust PCA
+        [R1, R2] = singleRPCA(dataShifted, lambda(ii), -1, -1, false);
+        
+        % Unshift the low-rank matrix, for procrustes analysis
+        % TO DO - this unshifting may not be necessary - check (but timing
+        % would be messed up...)
+        LR = R1.';
+        Sp = R2.';
+        LR_Reshifted = zeros(size(LR));
+        Sp_Reshifted = zeros(size(LR));
+        for i=1:size(data,1)
+            LR_Reshifted(i,[randShift(i):end 1:randShift(i)-1]) = LR(i,:);
+            Sp_Reshifted(i,[randShift(i):end 1:randShift(i)-1]) = Sp(i,:);
+        end
+        lowRankTemp = LR_Reshifted';
+%         dataS(:,:,count)=dataShifted;
+        sparseTemp = Sp_Reshifted';
+        
+        % Procrustes analysis to update lambda
+        % Procrustes on the stim artifact (compare data to sparse matrix)
+        pre = -5;
+        post = 40; 
+        % TO DO: may need to change 'data' each time (should I really be
+        % comparing this to the original data, or just the previous low
+        % rank each time?)
+        [d_mat,~] = procrustes_metric(t_orig, t_orig, data(:,:,count)', sparseTemp, pre, post, [], plotIt);
+        mean_d_mat(ii,1) = mean(d_mat);
+
+        
+        figure
+        subplot(2,1,1)
+        data_orig = data(60,(t_orig>=pre & t_orig<=post),count);
+        sparse_orig = sparseTemp(t_orig>=pre & t_orig<=post, 60, count);
+        t_short = t_orig(t_orig>=pre & t_orig<=post);
+        plot(t_short,data_orig), hold on, plot(t_short, sparse_orig')
+        title(['Artifact, lambda = ', num2str(lambda(ii))])
+        xlabel('time (ms)')
+
+        
+        
+        % Procrustes on the data post stim (compare data to low rank matrix)
+        pre = 5;
+        post = 50; 
+        [d_mat,~] = procrustes_metric(t_orig, t_orig, data(:,:,count)', lowRankTemp, pre, post, [], plotIt);
+        mean_d_mat(ii,2) = mean(d_mat);
+        
+        subplot(2,1,2)
+        data_orig = data(60,(t_orig>=pre & t_orig<=post),count);
+        lr_orig = lowRankTemp(t_orig>=pre & t_orig<=post);
+        t_short = t_orig(t_orig>=pre & t_orig<=post);
+        plot(t_short, data_orig), hold on, plot(t_short, lr_orig')
+        title(['post stim, lambda = ', num2str(lambda(ii))])
+        xlabel('time (ms)')
+
+        
+        if ii>=2 % Now need to start defining new lambda values
+            if ii==2
+                lambda(ii+1) = (lambda(1)+lambda(2))/2;
+            else
+                temp = mean(mean_d_mat,2);
+                [~, min_ind1] = min(temp);
+%                 temp = mean_d_mat;
+                temp(min_ind1) = 1;
+                [~, min_ind2] = min(temp);
+                lambda(ii+1) = (lambda(min_ind1)+lambda(min_ind2))/2;
+            end
+        end
+        
+        if ii>=2
+            changeProcrustes = abs(mean_d_mat(ii)-mean_d_mat(ii-1));
+        end
+        
+        ii = ii + 1;
+        
+    end
+    
+    % Plot the changes to the mean procrustes values and lambda
+    figure
+    scatter(lambda(1:end-1), mean_d_mat(:,1), 'b'), hold on
+    scatter(lambda(1:end-1), mean_d_mat(:,2), 'r')
+    scatter(lambda(1:end-1), mean(mean_d_mat,2), 'g')
+    legend('Procrustes on sparse', 'Procrustes on low rank', 'Mean across')
+    xlabel('lambda values'), ylabel('mean procrustes value across channels')
+    title('Lambda vs. mean procrustes across 62 non-stim channels')
+    
+    % Now take the minimum mean procrustes d value and use that lambda for
+    % this iteration.
+    % UPDATE THIS: for now need to re-run the rPCA with that lambda
+    [~, min_ind] = min(mean(mean_d_mat,2));
+    lambdaFinal(count) = lambda(min_ind);
+    
+    % Run rPCA
+    if global_lambda == true
+        L = gL;
+    else
+        L = lambdaFinal(count);
+        [R1, R2] = singleRPCA(dataShifted, L, -1, -1, false);
+    end
     
     % Unshift the low-rank matrix, which will then be used recursively for
-    % another RPCA
+    % another rPCA
     LR = R1.';
     Sp = R2.';
     LR_Reshifted = zeros(size(LR));
@@ -47,10 +159,11 @@ for count=1:iters
     data(:,:,count+1) = LR_Reshifted;
     dataS(:,:,count)=dataShifted;
     sparse(:,:,count) = Sp_Reshifted;
+    
 end
 disp('rPCA loop finished')
 
-%% Plot data
+%% Create plot data matrices
 full = 0; % Set this to 1 if you want to plot all of the data points, otherwise full=0 will just plot some data points to improve run time 
 
 if full==1
@@ -69,48 +182,72 @@ elseif full==0
     t=(0:length(data)-1)/fs_data*1000;
 end
 
+%% Procrustes with function
+figure
+subplot(2,1,1)
+plot(t_orig, data(1,:,1)'), hold on, plot(t_orig, sparse(1,:,1))
+subplot(2,1,2)
+plot(t_orig, data(1,:,2)')
+
+plotIt = true;
+pre = 0;
+post = 40;
+
+
+data_orig = data(:,(t_orig>=pre & t_orig<=post),1);
+sparse_orig = sparse(:,(t_orig>=pre & t_orig<=post),1);
+figure
+plot(data_orig(1,:)), hold on, plot(sparse_orig(1,:))
+
+
+
+
+[d_mat,z_mat] = procrustes_metric(t_orig, t_orig, data(:,:,1)', sparse(:,:,1)', pre, post, [], plotIt);
+disp('Finished Procrustes analysis')
+
+%% Plot data
 figure
 subplot(2,2,1)
 waterfall(CH, T, abs(dataPlot(:,:,1))), axis tight
 xlabel('ch'), ylabel('time (ms)'), zlabel('ecog')
-title(['Original data, \lambda = ', num2str(lambda)])
+title('Original data')
 
 subplot(2,2,2)
 waterfall(CH, T, abs(dataPlot(:,:,2))), axis tight
 xlabel('ch'), ylabel('time (ms)'), zlabel('ecog')
-title('First iter')
+title(['First iter, \lambda = ', num2str(lambdaFinal(1))])
 
 subplot(2,2,4)
 waterfall(CH, T, abs(dataPlot(:,:,ceil(iters/2)+1))), axis tight
 xlabel('ch'), ylabel('time (ms)'), zlabel('ecog')
-title([num2str(ceil(iters/2)), 'th iter'])
+title([num2str(ceil(iters/2)), 'th iter, \lambda = ', num2str(lambdaFinal(ceil(iters/2)-1))])
 
 subplot(2,2,3)
 waterfall(CH, T, abs(dataPlot(:,:,end))), axis tight
 xlabel('ch'), ylabel('time (ms)'), zlabel('ecog')
-title(['Last iter = #', num2str(iters)])
+title(['Last iter = #', num2str(iters), ', \lambda = ', num2str(lambdaFinal(end))])
 
 %% Plot first and last low-rank and sparse matrices
 figure
 subplot(2,2,1)
 waterfall(CH, T, abs(dataPlot(:,:,2))), axis tight
 xlabel('ch'), ylabel('time (ms)'), zlabel('ecog')
-title(['First iter Low-rank, \lambda = ', num2str(lambda)])
+title(['First iter Low-rank, \lambda = ', num2str(lambdaFinal(1))])
 
 subplot(2,2,2)
 waterfall(CH, T, abs(sparsePlot(:,:,1))), axis tight
 xlabel('ch'), ylabel('time (ms)'), zlabel('ecog')
-title(['First iter Sparse, \lambda = ', num2str(lambda)])
+title(['First iter Sparse, \lambda = ', num2str(lambdaFinal(1))])
 
 subplot(2,2,3)
 waterfall(CH, T, abs(dataPlot(:,:,end))), axis tight
 xlabel('ch'), ylabel('time (ms)'), zlabel('ecog')
-title(['Last iter Low-rank, \lambda = ', num2str(lambda)])
+title(['Last iter #', num2str(iters), ' Low-rank, \lambda = ', num2str(lambdaFinal(end))])
 
 subplot(2,2,4)
 waterfall(CH, T, abs(sparsePlot(:,:,end))), axis tight
 xlabel('ch'), ylabel('time (ms)'), zlabel('ecog')
-title(['Last iter Sparse, \lambda = ', num2str(lambda)])
+title(['Last iter #', num2str(iters), ' Sparse, \lambda = ', num2str(lambdaFinal(end))])
 
 %% Check a few channels
 chan_interest = [20 51 60 61]; % This is the true ECoG channel. You do not need to account for the stim channels or any bad channels
@@ -126,12 +263,14 @@ for i=1:length(chan)
     hold on
     plot(t, data(chan(i),:,2),'b')
     plot(t, data(chan(i),:,end),'r')
-    title(['Ch.', num2str(chan_interest(i)), ' with: \lambda = ', num2str(lambda), ', iters = ', num2str(iters)])
+    title(['Ch.', num2str(chan_interest(i))])
     ylim([-1e-4, 1e-4])
 end
 
 subplot(length(chan),1,1)
-title(['Original and low-rank data sets, Ch. ', num2str(chan_interest(1)), ' with: \lambda = ', num2str(lambda), ', iters = ', num2str(iters)])
+title(['Original and low-rank data sets with: \lambda = ', num2str(lambdaFinal(1)),...
+        ', iter 1; and \lambda = ', num2str(lambdaFinal(end)), ', iter ', num2str(iters), ...
+        sprintf('\nCh. '), num2str(chan_interest(1))])
 legend('Original data', 'First low-rank matrix', 'Last low-rank matrix')
 ylabel('ECoG (V)')
 %% Compare one channel
@@ -144,7 +283,7 @@ hold on
 plot(t, data(chan,:,2),'b')
 plot(t, data(chan,:,end),'r')
 legend('Original data', 'First low-rank matrix', 'Last low-rank matrix')
-title(['Original and low-rank data sets, Ch. ', num2str(chan_interest), ' with: \lambda = ', num2str(lambda), ', iters = ', num2str(iters)])
+title(['Original and low-rank data sets, Ch. ', num2str(chan_interest), ' with: \lambda = ', num2str(lambdaFinal), ', iters = ', num2str(iters)])
 ylabel('ECoG (V)')
 
 subplot(2,1,2)
@@ -161,6 +300,7 @@ d = zeros(1, size(data,1));
 for i=1:size(data, 1)
     [d(i),Z,transform] = procrustes(data(i,:,1)',sparse(i,:,1)');
 end
+
 
 %% Procrutes, like David's
 pre_procrust = -5;
