@@ -10,7 +10,7 @@ plot((f),(P1),'linewidth',[2])
 title('Single-Sided Amplitude Spectrum of X(t)')
 xlabel('f (Hz)')
 ylabel('|P1(f)|')
-xlim([0 100])
+xlim([0 300])
 ylim([0 2e-5])
 set(gca,'fontsize',14)
 hold on
