@@ -3,14 +3,33 @@
 % rPCA
 close all; clear all
 
-% Load data:
-% load('C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\stim_12_52.mat')
-% addpath('C:\Users\jcronin\Code\Matlab\Experiments\stimulation_spacing\inexact_alm_rpca')
-% addpath('C:\Users\jcronin\Code\Matlab\Experiments\stimulation_spacing\inexact_alm_rpca\PROPACK')
+% Add paths:
+addpath('C:\Users\jcronin\Code\Matlab\Experiments\stimulation_spacing\resistivity_extraction')
+addpath('C:\Users\jcronin\Code\Matlab\Experiments\stimulation_spacing\inexact_alm_rpca')
+addpath('C:\Users\jcronin\Code\Matlab\Experiments\stimulation_spacing\inexact_alm_rpca\PROPACK')
 
-load('/Users/jcronin/Desktop/Data/stim_12_52.mat')
-addpath('/Users/jcronin/Desktop/Code/Experiments/stimulation_spacing/inexact_alm_rpca')
-addpath('/Users/jcronin/Desktop/Code/Experiments/stimulation_spacing/inexact_alm_rpca/PROPACK')
+% Load epoched data:
+load('C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\1sBefore1safter\stim_12_52.mat')
+L = size(dataEpoched, 1); % the number of samples in each epoch (will use this same amount for non-epoched data)
+
+% Load original data (not epoched):
+load('C:\Users\jcronin\Data\Subjects\3f2113\data\d6\Matlab\StimulationSpacing\3f2113_RawData\stim_12_52_raw.mat')
+
+% Epoch the original data between stims
+data = Wave.data;
+data_fs = Wave.info.SamplingRateHz;
+stim = Sing.data(:,1);
+stim_fs = Sing.info.SamplingRateHz;
+[epochedSignal] = stimulationExtractionBetween(data, data_fs, stim, stim_fs, L)
+
+
+dataBetween = A_stimBetweenExtract;
+dataEpoched = squeeze(getEpochSignal(data,sts-presamps,sts+postsamps+1));
+
+
+% load('/Users/jcronin/Desktop/Data/stim_12_52.mat')
+% addpath('/Users/jcronin/Desktop/Code/Experiments/stimulation_spacing/inexact_alm_rpca')
+% addpath('/Users/jcronin/Desktop/Code/Experiments/stimulation_spacing/inexact_alm_rpca/PROPACK')
 
 % define stimulation channels
 stimChan1 = stim_chans(1);
