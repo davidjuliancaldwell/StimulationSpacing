@@ -20,7 +20,7 @@ SUB_DIR = fullfile(myGetenv('subject_dir'));
 
 % this is from my z_constants
 
-sid = SIDS{3};
+sid = SIDS{4};
 
 % load in tank
 if (strcmp(sid, '3f2113'))
@@ -86,7 +86,7 @@ if (strcmp(sid, '3f2113'))
     
     %%%%%%%%% below is for wide!!!
 elseif (strcmp(sid,'20f8a3'))
-    filePath = 'C:\Users\djcald.CSENETID\Google Drive\GRIDLabDavidShared\20f8a3\StimulationSpacing\StimSpacing_28_4_Wide';
+    filePath = 'C:\Users\djcald.CSENETID\GoogleDrive\GRIDLabDavidShared\20f8a3\StimulationSpacing\StimSpacing_28_4_Wide';
     
     prompt = {'how many channels did we record from? e.g 48 ', 'what were the stimulation channels? e.g 28 29 ', 'how long before each stimulation do you want to look? in ms e.g. 1', 'how long after each stimulation do you want to look? in ms e.g 5'};
     dlg_title = 'StimChans';
@@ -124,11 +124,12 @@ elseif (strcmp(sid,'20f8a3'))
     data = Wave.data;
     data_info = Wave.info;
     
-    OUTPUT_DIR = 'C:\Users\djcald.CSENETID\Google Drive\GRIDLabDavidShared\20f8a3\StimulationSpacingChunked';
+    OUTPUT_DIR = 'C:\Users\djcald.CSENETID\GoogleDrive\GRIDLabDavidShared\20f8a3\StimulationSpacingChunked';
     
     
     
 elseif (strcmp(sid,'2fd831'))
+    %%
     filePath = strcat(SUB_DIR,'\',sid,'\data\d7\ConvertedMatlabFiles\stimSpacing\stimSpacing-');
     inputFile = input('which block ? \n','s');
     totalFile = strcat(filePath,inputFile);
@@ -136,8 +137,6 @@ elseif (strcmp(sid,'2fd831'))
     
     Wave.info = ECO1.info;
     
-    
-    %%
     % ui box for input for stimulation channels
     prompt = {'how many channels did we record from? e.g 48 ', 'what were the stimulation channels? e.g 28 29 ', 'how long before each stimulation do you want to look? in ms e.g. 1', 'how long after each stimulation do you want to look? in ms e.g 5'};
     dlg_title = 'StimChans';
@@ -174,28 +173,79 @@ elseif (strcmp(sid,'2fd831'))
     
     
     OUTPUT_DIR = 'C:\Users\djcald.CSENETID\GoogleDrive\GRIDLabDavidShared\2fd831\StimulationSpacingChunked';
+elseif (strcmp(sid,'2a8d14'))
+    %%
+
+   % ui box for input for stimulation channels
+    prompt = {'how many channels did we record from? e.g 48 ', 'what were the stimulation channels? e.g 28 29 ', 'how long before each stimulation do you want to look? in ms e.g. 1', 'how long after each stimulation do you want to look? in ms e.g 5'};
+    dlg_title = 'StimChans';
+    num_lines = 1;
+    defaultans = {'40','15 36','1','10'};
+    answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
+    numChans = str2num(answer{1});
+    chans = str2num(answer{2});
+    preTime = str2num(answer{3});
+    postTime = str2num(answer{4});
+    
+    stim_1 = chans(1);
+    stim_2 = chans(2);
+    
+    filePath = 'C:\Users\djcald.CSENETID\Data\ConvertedTDTfiles\2a8d14\stimSpacing_';
+    
+    
+    totalFile = strcat(filePath,num2str(stim_1),'_',num2str(stim_2),'_wide');
+    load(totalFile);
+    
+    
+    
+    stim_chans = chans;
+    
+    % get sampling rates
+    fs_data = Wave.info.SamplingRateHz;
+    fs_stim = Stim.info.SamplingRateHz;
+    
+    % stim data
+    stim = Stim.data;
+    stim_info = Stim.info;
+    % current data
+    sing = Sing.data;
+    Sing_info = Sing.info;
+    Sing_info = Sing.info;
+    
+    Sing = Sing.data;
+    
+    % recording data
+    data = Wave.data;
+    data_info = Wave.info;
+    
+    dataTemp = data(:,1:numChans);
+    clear data;
+    data = dataTemp;
+    clear dataTemp;
+    OUTPUT_DIR = 'C:\Users\djcald.CSENETID\GoogleDrive\GRIDLabDavidShared\2a8d14\StimulationSpacingChunked';
+
 end
 %%
-plotIt = 'n';
+plotIt = 'y';
 
 %% plot stim
 %
 % figure
 % hold on
 % for i = 1:size(stim,2)
-%
+% 
 %     t = (0:length(stim)-1)/fs_stim;
 %     subplot(2,2,i)
 %     plot(t*1e3,stim(:,i))
 %     title(sprintf('Channel %d',i))
-%
-%
+% 
+% 
 % end
-%
-%
+% 
+% 
 % xlabel('Time (ms)')
 % ylabel('Amplitude (V)')
-%
+% 
 % subtitle('Stimulation Channels')
 
 %% Sing looks like the wave to be delivered, with amplitude in uA
@@ -550,19 +600,19 @@ legend(s,legLabels);
 % pick range of stims
 j = 1:10;
 
-if strcmp(plotIt,'y')
-    figure
-    for i = 1:128
-        plot(t,1e6*mean(dataEpoched(:,i,j),3),'m','LineWidth',1)
-        xlabel('time (ms)')
-        ylabel('Amplitude (\muV)')
-        title(['Average for subselected stims for channel ', num2str(i)])
-        ylim([-150 150])
-        xlim([-5 100])
-        pause(1)
-        
-    end
-end
+% if strcmp(plotIt,'y')
+%     figure
+%     for i = 1:128
+%         plot(t,1e6*mean(dataEpoched(:,i,j),3),'m','LineWidth',1)
+%         xlabel('time (ms)')
+%         ylabel('Amplitude (\muV)')
+%         title(['Average for subselected stims for channel ', num2str(i)])
+%         ylim([-150 150])
+%         xlim([-5 100])
+%         pause(1)
+%         
+%     end
+% end
 %%
 figure
 i = 21;

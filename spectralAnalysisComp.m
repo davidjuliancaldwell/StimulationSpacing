@@ -1,4 +1,5 @@
 function [f,P1] = spectralAnalysisComp(fs_data,dataEpoched)
+%
 fs = fs_data;
 T = 1/fs;
 L = length(dataEpoched);

@@ -21,10 +21,10 @@ if ~allElecs
         if find(ind) == 1
             startInd = 1;
         else
-            startInd = sum(Montage.Montage(1:find(ind)-1));
+            startInd = sum(Montage.Montage(1:(find(ind)-1)))+1;
         end
         
-        locsOfInterest = Montage.MontageTrodes(startInd+interestElecs{i},:);
+        locsOfInterest = Montage.MontageTrodes(startInd+interestElecs{i}-1,:);
         locsTotal = [locsTotal; locsOfInterest];
         
         identifierTemp = ones(size(locsOfInterest))*i;
@@ -42,7 +42,7 @@ if allElecs
     j = 0;
     colors = distinguishable_colors(n_elems);
     figure
-   %PlotCortex(sid,'b',[],0.5)
+    %PlotCortex(sid,'b',[],0.5)
     hold on
     
     
@@ -58,7 +58,14 @@ if allElecs
         j = j + total;
         
         scatter3(locsS(:,1),locsS(:,2),locsS(:,3),[100],colors(i,:),'filled');
+   
         
+        trodeLabels = [1:total];
+        for chan = 1:total
+            txt = num2str(trodeLabels(chan));
+            t = text(locsS(chan,1),locsS(chan,2),locsS(chan,3),txt,'FontSize',10,'HorizontalAlignment','center','VerticalAlignment','middle');
+            set(t,'clipping','on');
+        end
         
     end
     

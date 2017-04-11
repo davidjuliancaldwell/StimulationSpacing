@@ -28,6 +28,6 @@ Eco4 = structureData.ECO4;
 Wave.info = structureData.ECO1.info; 
 Wave.data = [Eco1.data Eco2.data Eco3.data Eco4.data];
 
-OUTPUT_DIR = 'C:\Users\djcald.CSENETID\Data\ConvertedTDTfiles\2fd831';
+OUTPUT_DIR = 'C:\Users\djcald.CSENETID\Data\ConvertedTDTfiles\2a8d14';
 save(fullfile(OUTPUT_DIR, ['stim_widePulse_',num2str(stim_chans(1)),'_',num2str(stim_chans(2))]),'Sing','Stim','Stm0','Wave');
 

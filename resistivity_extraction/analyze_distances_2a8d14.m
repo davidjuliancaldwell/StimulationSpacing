@@ -1,11 +1,13 @@
 %% script to analyze stimulation pulses for subject 2fd831
 
-sid = '2fd831';
+close all;clear all;clc
+
+sid = '2a8d14';
 SUB_DIR = fullfile(myGetenv('subject_dir'));
 montageFilepath = strcat(SUB_DIR,'\',sid,'\',sid,'_Montage.mat');
 load(montageFilepath);
-load('2fd831_mappedElectrodes.mat')
-filePath = 'C:\Users\djcald.CSENETID\GoogleDrive\GRIDLabDavidShared\2fd831\StimulationSpacingChunked\stim_widePulse_121_55';
+load('2a8d14_mappedElectrodes.mat')
+filePath = 'C:\Users\djcald.CSENETID\GoogleDrive\GRIDLabDavidShared\2a8d14\StimulationSpacingChunked\stim_widePulse_9_33_15_21';
 load(filePath)
 
 
@@ -26,6 +28,8 @@ subPlots = numSubplots(numChans);
 p = subPlots(1);
 q = subPlots(2);
 scaling = false;
+
+realStim = [9 33];
 
 % plot each condition separately e.g. 1000 uA, 2000 uA, and so on
 
@@ -50,7 +54,13 @@ for i=uniqueLabels
             ax.YColor = 'red';
             ax.LineWidth = 2;
             title(num2str(j),'color','red');
-            
+        elseif ismember(j,realStim)
+            ax = gca;
+            ax.Box = 'on';
+            ax.XColor = 'blue';
+            ax.YColor = 'blue';
+            ax.LineWidth = 2;
+            title(num2str(j),'color','blue');
         else
             title(num2str(j));
             
@@ -81,30 +91,12 @@ for i=uniqueLabels
 end
 
 %% Plot Cortex 
-
-weights = max(mean(dataEpoched,3));
-
-% colorbrewer colormap
-CT = cbrewer('div','RdBu',128);
-% flip it so red is increase, blue is down
-
-CT = flipud(CT);
-CT = cbrewer('seq','PuRd',128);
-figure
-hold on
-
-PlotDotsDirect(sid,locs,weights,'b',[0 abs(max(weights))],15,CT,1:128,false,false,0.25);
-
-colormap(CT)
-colorbar;
-
-%% Plot Cortex 
-badChans = [55 121];
+badChans = [9 15 21 29 30 33];
 % colorbrewer colormap
 % flip it so red is increase, blue is down
 CT = cbrewer('seq','PuRd',128);
 
-stimChans = [55 121];
+stimChans = [9 33];
 figure
 
 hold on
@@ -125,3 +117,19 @@ cbar = colorbar;
 ylabel(cbar,'max average stimulation pulse magnitude (V)')
 title('Peak Stimulation Voltage')
 % stim chans
+
+%%
+
+% CT = flipud(CT);
+% CT = cbrewer('seq','PuRd',128);
+% stimChans = [9 33];
+% 
+% figure
+% 
+% hold on
+% weights = max(mean(dataEpoched(:,:,:),3));
+% weights(stimChans) = 0;
+% 
+% 
+% PlotDotsDirect(sid,locs,weights,'b',[0 abs(max(weights))],15,CT,1:128,true,false,0.25);
+
