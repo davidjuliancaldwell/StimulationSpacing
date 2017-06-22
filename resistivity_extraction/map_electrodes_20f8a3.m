@@ -1,4 +1,4 @@
-%% DJC 3-24-2017 - script to map the clinical electrodes to the ones we recorded for subject 2fd831
+%% DJC 3-24-2017 - script to map the clinical electrodes to the ones we recorded for subject 20f8a3
 
 sid = '20f8a3';
 SUB_DIR = fullfile(myGetenv('subject_dir'));
@@ -12,17 +12,22 @@ load(montageFilepath);
 %interestNames = {'Grid2','LTP','LMT','LPT','LOF','LAHD','LMHD','LAID','LMID','LPID'};
 %interestElecs = {[1:32],[1,3:6],[1:6],[1,3,5],[1,3,5,7],[1,3,5],[1,3,5],[1:8,10,12,14],[2,4:13],[1:12]};
 
-interestNames = {'Grid1','Grid2'};
-interestElecs = {[1:32],[1:16]};
+interestNames = {'Grid1','Grid2','Depth4','Depth1','Depth3','OL','MTL','Depth2'};
+interestElecs = {[1:32],[1:16],[1:8],[1:8],[1:8],[1:6],[1:6],[1:8]};
 
 
 [locs,identifier] = splitMontage(Montage,sid,interestNames,interestElecs);
 
-saveIt = 0;
+% ok - now we have to remap it 
+
+locs = [locs(1:48,:);zeros(16,3);locs(49:78,:);zeros(2,3);locs(79:end,:)];
+identifier = [identifier(1:48,:);zeros(16,3);identifier(49:78,:);zeros(2,3);identifier(79:end,:)];
+
+saveIt = 1;
 plotIt = 1;
 %%
 if saveIt
-    save('20f8a3_mappedElectrodes.mat','locs','identifier','interestNames','interestElecs')
+    save('20f8a3_mappedElectrodes_NEW.mat','locs','identifier','interestNames','interestElecs')
 end
 
 %%

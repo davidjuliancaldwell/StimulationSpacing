@@ -11,16 +11,26 @@ interestElecs = {[1:32],[1:32],[1,3:6],[1:6],[1:6],[1,3,5],[1,3,5,7],[1,3,5],[1,
 %interestNames = {'Grid2','LTP','LMT','LPT','LOF','LAHD','LMHD','LAID','LMID','LPID'};
 %interestElecs = {[1:32],[1,3:6],[1:6],[1,3,5],[1,3,5,7],[1,3,5],[1,3,5],[1:8,10,12,14],[2,4:13],[1:12]};
 
-interestNames = {'LPT'};
-interestElecs = {1};
+%interestNames = {'LPT'};
+%interestElecs = {1};
 
+convertBis = 1;
 
+if convertBis
+    montageBISFilepath = strcat(SUB_DIR,'\',sid,'\','bis_trodes.mat');
+    load(montageBISFilepath);
+    Montage.MontageTrodes = AllTrodes; % convert to BIS trodes
+end
+
+%%
 [locs,identifier] = splitMontage(Montage,sid,interestNames,interestElecs);
 
 saveIt = 0;
 plotIt = 1;
 %%
-if saveIt
+if saveIt && convertBis
+    save('2fd831_BIS_mappedElectrodes.mat','locs','identifier','interestNames','interestElecs')
+elseif saveIt && ~convertBis
     save('2fd831_mappedElectrodes.mat','locs','identifier','interestNames','interestElecs')
 end
 
@@ -40,12 +50,12 @@ if plotIt
         tempInd = tempInd(:,1);
         scatter3(locs(tempInd,1),locs(tempInd,2),locs(tempInd,3),[100],colors(i,:),'filled')
     end
-
-  set(get(get(h1,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
-  set(get(get(h2,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
+    
+    set(get(get(h1,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
+    set(get(get(h2,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
     legend(interestNames)
-        %legend({'','',interestNames{:}})
-
+    %legend({'','',interestNames{:}})
+    
     
     %% compare to all electrodes
     
@@ -53,8 +63,8 @@ if plotIt
     j = 0;
     colors = distinguishable_colors(n_elems);
     figure
-        hold on
-
+    hold on
+    
     [h1,h2] = PlotCortex(sid,'b',[],0.5);
     
     
@@ -73,9 +83,9 @@ if plotIt
         
         
     end
-  set(get(get(h1,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
-  set(get(get(h2,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
-
+    set(get(get(h1,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
+    set(get(get(h2,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
+    
     legend(Montage.MontageTokenized)
     %legend({'','',Montage.MontageTokenized{:}})
 end

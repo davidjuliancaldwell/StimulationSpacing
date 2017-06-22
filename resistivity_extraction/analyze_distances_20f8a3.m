@@ -1,13 +1,12 @@
-%% script to analyze stimulation pulses for subject 2fd831
+%% 4-19-2017 - script to plot electrode distances for 20f8a3
 
-sid = '2fd831';
+sid = '20f8a3';
 SUB_DIR = fullfile(myGetenv('subject_dir'));
 montageFilepath = strcat(SUB_DIR,'\',sid,'\',sid,'_Montage.mat');
 load(montageFilepath);
-load('2fd831_mappedElectrodes.mat')
-filePath = 'C:\Users\djcald.CSENETID\GoogleDrive\GRIDLabDavidShared\2fd831\StimulationSpacingChunked\stim_widePulse_121_55';
+load('20f8a3_mappedElectrodes.mat')
+filePath = 'C:\Users\djcald.CSENETID\GoogleDrive\GRIDLabDavidShared\20f8a3\StimulationSpacingChunked\stim_widePulse_20_12';
 load(filePath)
-
 
 %% plot individual trials for each condition on a different graph
 
@@ -17,6 +16,7 @@ uniqueLabels = unique(abs(Sing(Sing~=0)));
 % intialize counter for plotting
 k = 1;
 
+dataEpoched = dataEpoched(:,1:48,:);
 % make vector of stim channels
 stimChans = stim_chans;
 
@@ -99,12 +99,12 @@ colormap(CT)
 colorbar;
 
 %% Plot Cortex 
-badChans = [55 121];
+badChans = [20 12];
 % colorbrewer colormap
 % flip it so red is increase, blue is down
 CT = cbrewer('seq','PuRd',128);
 
-stimChans = [55 121];
+stimChans = [20 12];
 figure
 
 hold on
@@ -113,18 +113,17 @@ gChansMat(badChans) = 0;
 gChansLabel = [1:size(locs,1)];
 gChansLabel = gChansLabel(gChansMat);
 locsG = locs(gChansMat,:);
-weights = log(max(mean(dataEpoched(:,gChansMat,:),3))); % change away from log if need be 
-PlotDotsDirect(sid,locsG,weights,'b',[min(weights) max(weights)],25,CT,gChansLabel,true,false,0.25);
+weights = log(max(mean(dataEpoched(:,gChansMat,:),3)));
 
 %PlotDotsDirect(sid,locsG,weights,'b',[0 abs(max(weights))],25,CT,gChansLabel,true,false,0.25);
+PlotDotsDirect(sid,locsG,weights,'b',[min(weights) max(weights)],25,CT,gChansLabel,true,false,0.25);
 
 
 weightsNew = ones(size(stimChans));
 locsC = locs(stimChans,:);
 %PlotDotsDirect(sid,locsC,weightsNew,'b',[0 abs(max(weights))],25,[0.1 0.5 1; 0.1 0.5 1;0.1 0.5 1],stimChans,true,true,0.25);
-PlotDotsDirect(sid,locsC,weightsNew,'b',[min(weights) max(weights)],25,[0.1 0.5 1; 0.1 0.5 1;0.1 0.5 1],stimChans,true,true,0.25);
-
-
+ %colormap(CT)
+ PlotDotsDirect(sid,locsC,weightsNew,'b',[min(weights) max(weights)],25,[0.1 0.5 1; 0.1 0.5 1;0.1 0.5 1],stimChans,true,true,0.25);
  colormap(CT)
 cbar = colorbar;
 ylabel(cbar,'max average stimulation pulse magnitude (V)')

@@ -1,4 +1,4 @@
-function [subtracted_sig_matrixS_I, subtracted_sig_cellS_I,recon_artifact_matrix,recon_artifact,t] =  ica_artifact_remove_train(tTotal,data,stimChans,fs_data,scale_factor,numComponentsSearch,plotIt,channelInt,meanSub,orderPoly,pre,post)
+function [processedSig, processedSig_cell,recon_artifact,recon_artifact_cell,t] =  ica_train(tTotal,data,stimChans,fs_data,scale_factor,numComponentsSearch,plotIt,channelInt,meanSub,orderPoly,pre,post)
 %USAGE: function [subtracted_sig_matrixS_I, subtracted_sig_cellS_I] =  ica_artifact_remove(t,data,stimChans,pre,post,fs_data,scale_factor,numComponentsSearch,plotIt,channelInt)
 %This function will perform the fast_ica algorithm upon a data set in the
 %format of m x n x p, where m is samples, n is channels, and p is the
@@ -42,7 +42,7 @@ end
 
 % default number of components to search
 if (~exist('numComponentsSearch','var'))
-    numComponentsSearch = 100;
+    numComponentsSearch = 15;
 end
 
 % plot intermediate steps
@@ -63,7 +63,7 @@ if (~exist('orderPoly','var'))
     orderPoly = 6;
 end
 
-
+freqFilter = false;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -120,8 +120,8 @@ numTrials = size(dataIntTime,3);
 
 for i = 1:numTrials
     sig_epoch = scale_factor.*squeeze(dataIntTime(:,:,i));
+    %[icasig_temp,mixing_mat_temp,sep_mat_temp] = fastica(sig_epoch','g','pow3','numOfIC',numComponentsSearch);
     [icasig_temp,mixing_mat_temp,sep_mat_temp] = fastica(sig_epoch','g','gauss','approach','symm');
-    
     i_icasigS{i} = icasig_temp;
     i_mixing_matS{i} = mixing_mat_temp;
     i_sep_matS{i} = sep_mat_temp;
@@ -137,7 +137,7 @@ if plotIt
     for j = 1:size(dataIntTime,3)
         figure
         numInt = min(size(i_icasigS{j},1),5);
-
+        % numInt = 5;
         for i = 1:numInt
             sh(i)= subplot(numInt,1,i);
             plot(t,i_icasigS{j}(i,:),'linewidth',2)
@@ -154,53 +154,50 @@ if plotIt
 end
 
 
-%% extract ICA components that are like the artifact (they occur near a certain time and have prominence)
+%% set ICA components that are like the artifact to zero (they occur near a certain time and have prominence)
 
 % need to adjust this for case where it's close to zero but not quite
 % equal?
 numTrials = size(dataIntTime,3);
 
-i_ica_kept = {};
-i_ica_mix_kept = {};
+i_ica_art = {};
+i_ica_mix_art = {};
 
 % figure
 % hold on
 
 for i = 1:numTrials
+    numICs = size(i_icasigS{i},1);
     start_index = 1;
-    
-    
-    % adjust if num components search is too many
-    
-    if numComponentsSearch > size(i_icasigS{i},1)
+    for j = 1:numICs
         
-        numComponentsSearch = size(i_icasigS{i},1);
-        
-    end
-    
-    for j = 1:numComponentsSearch
         % have to tune this
         [pk_temp_pos,locs_temp_pos] = findpeaks(i_icasigS{i}(j,:),fs_data,'MinPeakProminence',10);
         [pk_temp_neg,locs_temp_neg] = findpeaks(-1*i_icasigS{i}(j,:),fs_data,'MinPeakProminence',10);
         %
         
-%         findpeaks(-1*i_icasigS{i}(j,:),fs_data,'MinPeakProminence',10)
-%         findpeaks(i_icasigS{i}(j,:),fs_data,'MinPeakProminence',10)
-%         %
+        %         findpeaks(-1*i_icasigS{i}(j,:),fs_data,'MinPeakProminence',10)
+        %         findpeaks(i_icasigS{i}(j,:),fs_data,'MinPeakProminence',10)
+        %         %
         
         % should be at least 10 peaks even at 100 Hz trains
         total_peaks = length(pk_temp_pos)+length(pk_temp_neg);
         
-         [f,P1] = spectralAnalysisComp(fs_data,i_icasigS{i}(j,:));
-         [maxi,ind] = max(P1(f>62));
-         f_temp= f(f>62);
-         rounded_f = round(f_temp(ind),-1);
-            
-        % DJC 4-17-2017 - add in 200 Hz stim peak 
+        [f,P1] = spectralAnalysisComp(fs_data,i_icasigS{i}(j,:));
+        [maxi,ind] = max(P1(f>62));
+        f_temp= f(f>62);
+        rounded_f = round(f_temp(ind),-1);
+        
+        % DJC 4-17-2017 - add in 200 Hz stim peak
         if ((~isempty(pk_temp_pos) || ~isempty(pk_temp_neg)) && total_peaks > 10 && mod(rounded_f,200) == 0)
+            %         if ((~isempty(pk_temp_pos) || ~isempty(pk_temp_neg)) && total_peaks > 10)
             
-            i_ica_kept{i}(start_index,:) = i_icasigS{i}(j,:);
-            i_ica_mix_kept{i}(:,start_index) = i_mixing_matS{i}(:,j);
+            i_ica_art{i}(start_index,:) = i_icasigS{i}(j,:);
+            i_ica_mix_art{i}(:,start_index) = i_mixing_matS{i}(:,j);
+            
+            i_icasigS{i}(j,:) = 0;
+            i_mixing_matS{i}(:,j) = 0; % according to ICA removes EEG
+            % artifacts - just set rows of activation waveforms to be zero?
             
             start_index = start_index+1;
             
@@ -212,12 +209,12 @@ for i = 1:numTrials
             
             %  200 Hz frequency content, 60 Hz frequency content (added in
             %  120, 180 4-11-2017
-%             if (mod(rounded_f,60) == 0 | mod(rounded_f,120) == 0 | mod(rounded_f,180) == 0)
-%                 %if mod(rounded_f,60) == 0 || mod(rounded_f,200) == 0
-%                 i_ica_kept{i}(start_index,:) = i_icasigS{i}(j,:);
-%                 i_ica_mix_kept{i}(:,start_index) = i_mixing_matS{i}(:,j);
-%                 start_index = start_index+1;
-%             end
+            %             if (mod(rounded_f,60) == 0 | mod(rounded_f,120) == 0 | mod(rounded_f,180) == 0)
+            %                 %if mod(rounded_f,60) == 0 || mod(rounded_f,200) == 0
+            %                 i_ica_kept{i}(start_index,:) = i_icasigS{i}(j,:);
+            %                 i_ica_mix_kept{i}(:,start_index) = i_mixing_matS{i}(:,j);
+            %                 start_index = start_index+1;
+            %             end
             
         end
         %         if mod(rounded_f,200) == 0
@@ -229,82 +226,131 @@ for i = 1:numTrials
         
     end
     
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% this was the original
+    %         % have to tune this
+    %         [pk_temp_pos,locs_temp_pos] = findpeaks(i_icasigS{i}(j,:),fs_data,'MinPeakProminence',10);
+    %         [pk_temp_neg,locs_temp_neg] = findpeaks(-1*i_icasigS{i}(j,:),fs_data,'MinPeakProminence',10);
+    %         %
+    %
+    %         %         findpeaks(-1*i_icasigS{i}(j,:),fs_data,'MinPeakProminence',10)
+    %         %         findpeaks(i_icasigS{i}(j,:),fs_data,'MinPeakProminence',10)
+    %         %         %
+    %
+    %         % should be at least 10 peaks even at 100 Hz trains
+    %         total_peaks = length(pk_temp_pos)+length(pk_temp_neg);
+    %
+    %         if ((~isempty(pk_temp_pos) || ~isempty(pk_temp_neg)) && total_peaks > 10)
+    %
+    %             i_ica_art{i}(start_index,:) = i_icasigS{i}(j,:);
+    %             i_ica_mix_art{i}(:,start_index) = i_mixing_matS{i}(:,j);
+    %
+    %             i_icasigS{i}(j,:) = 0;
+    % %             i_mixing_matS{i}(:,j) = 0; % according to ICA removes EEG
+    % %             artifacts - just set rows of activation waveforms to be zero?
+    % %
+    %
+    %
+    %
+    %             start_index = start_index+1;
+    %         else
+    %
+    %             [f,P1] = spectralAnalysisComp(fs_data,i_icasigS{i}(j,:));
+    %             [maxi,ind] = max(P1);
+    %             rounded_f = round(f(ind),-1);
+    %
+    %             %  200 Hz frequency content, 60 Hz frequency content (added in
+    %             %  120, 180 4-11-2017
+    % %             if freqFilter
+    % %                 if (mod(rounded_f,60) == 0 | mod(rounded_f,120) == 0 | mod(rounded_f,180) == 0)
+    % %                     %if mod(rounded_f,60) == 0 || mod(rounded_f,200) == 0
+    % %
+    % %                     i_ica_art{i}(start_index,:) = i_icasigS{i}(j,:);
+    % %                     i_ica_mix_art{i}(:,start_index) = i_mixing_matS{i}(:,j);
+    % %
+    % %                     i_icasigS{i}(j,:) = 0;
+    % % %                     i_mixing_matS{i}(:,j) = 0;
+    % %
+    % %
+    % %                     start_index = start_index+1;
+    % %
+    % %                 end
+    % %             end
+    %
+    %         end
+    %         %         if mod(rounded_f,200) == 0
+    %         %             i_ica_kept{i}(start_index,:) = i_icasigS{i}(j,:);
+    %         %             i_ica_mix_kept{i}(:,start_index) = i_mixing_matS{i}(:,j);
+    %         %             start_index = start_index+1;
+    %         %         end
+    %
+    %
+    %     end
+    
     
 end
 
 %%
-recon_artifact = {};
-
 %%%%%%%%%%%%%%%%%%%%%%%
 % reconstruct stim artifact across channels
 
 % make matrix of reconstruction artifacts
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-total_art = zeros(size(dataIntTime,1),size(data,2));
-
-
 for i = 1:numTrials
     
-    recon_artifact_temp = (i_ica_mix_kept{i}*i_ica_kept{i})'./scale_factor;
+    recon_artifact_temp = (i_ica_mix_art{i}*i_ica_art{i})'./scale_factor;
     
     total_art(:,goods) = recon_artifact_temp;
     total_art(:,badTotal) = zeros(size(recon_artifact_temp,1),size(badTotal,2));
     
-    
-    recon_artifact{i} = total_art;
-    recon_artifact_matrix(:,:,i) = total_art;
-    num_modes_kept = size(i_ica_kept{i},1);
+    recon_artifact_cell{i} = total_art;
+    recon_artifact(:,:,i) = total_art;
+    num_modes_art = size(i_ica_art{i},1);
     
     if plotIt
         figure
         plot(total_art(:,channelInt))
         hold on
         plot(data((tTotal>=pre & tTotal<=post),channelInt,i))
-        title(['Channel ', num2str(channelInt), ' Trial ', num2str(i), 'Number of ICA modes kept = ', num2str(num_modes_kept)])
+        title(['Channel ', num2str(channelInt), ' Trial ', num2str(i), 'Number of ICA modes kept = ', num2str(num_modes_art)])
         legend({'recon artifact','original signal'})
     end
 end
 
 %% subtract each one of these components
 
-subtracted_sig_cellS_I = {};
+processedSig_cell = {};
 
-subtracted_sig_matrixS_I = zeros(size(dataIntTime,1),size(data,2),size(numTrials,1));
+processedSig = zeros(size(dataIntTime,1),size(data,2),size(numTrials,1));
 
 total_sig = zeros(size(dataIntTime,1),size(data,2));
 
 for i = 1:numTrials
-    
-    
-    combined_ica_recon = (i_ica_mix_kept{i}*i_ica_kept{i})';
-    
-    num_modes_kept = size(i_ica_kept{i},1);
-    
-    % subtracted_sig_ICA_temp = dataIntTime(:,:,i) - combined_ica_recon./scale_factor;
-    subtracted_sig_ICA_temp = dataIntTime(:,:,i) - combined_ica_recon./scale_factor;
+    reconstructued_sig = ((i_mixing_matS{i}*i_icasigS{i})')./scale_factor;
+    num_modes_art = size(i_ica_art{i},1);
+    num_modes_kept = size(i_icasigS{i},1) - num_modes_art;
     
     % add in bad channels back
-    total_sig(:,goods) = subtracted_sig_ICA_temp;
-    total_sig(:,badTotal) = zeros(size(subtracted_sig_ICA_temp,1),size(badTotal,2));
+    total_sig(:,goods) = reconstructued_sig;
+    total_sig(:,badTotal) = zeros(size(processedSig,1),size(badTotal,2));
     
-    subtracted_sig_cellS_I{i} = total_sig;
-    subtracted_sig_matrixS_I(:,:,i) = total_sig;
+    processedSig_cell{i} = total_sig;
+    processedSig(:,:,i) = total_sig;
     
     if plotIt
         figure
         plot(t,1e6*total_sig(:,channelInt),'LineWidth',2)
         hold on
         plot(t,1e6*data((tTotal>=pre & tTotal<=post),channelInt,i),'LineWidth',2)
-        title(['Channel ', num2str(channelInt), ' Trial ', num2str(i), ' Number of ICA modes subtracted = ', num2str(num_modes_kept)])
-        legend({'subtracted signal','original signal'})
+        title(['Channel ', num2str(channelInt), ' Trial ', num2str(i), ' Number of ICA modes excluded = ', num2str(num_modes_art)])
+        legend({'reconstructed','original signal'})
         ylabel(['Signal \muV'])
         xlabel(['Time (ms)'])
         set(gca,'Fontsize',[14]),
         
         figure
         plot(t,1e6*total_sig(:,channelInt),'LineWidth',2)
-        title(['Subtracted Signal for ', num2str(num_modes_kept), ' ICA modes, Channel ', num2str(channelInt), ' Trial ', num2str(i)])
+        title(['Reconstructed Signal for ', num2str(num_modes_kept), ' ICA modes, Channel ', num2str(channelInt), ' Trial ', num2str(i)])
         ylabel(['Signal \muV'])
         xlabel(['Time (ms)'])
         set(gca,'Fontsize',[14])
