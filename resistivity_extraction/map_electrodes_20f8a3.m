@@ -15,6 +15,13 @@ load(montageFilepath);
 interestNames = {'Grid1','Grid2','Depth4','Depth1','Depth3','OL','MTL','Depth2'};
 interestElecs = {[1:32],[1:16],[1:8],[1:8],[1:8],[1:6],[1:6],[1:8]};
 
+convertBis = 0;
+
+if convertBis
+    montageBISFilepath = strcat(SUB_DIR,'\',sid,'\','bis_trodes.mat');
+    load(montageBISFilepath);
+    Montage.MontageTrodes = AllTrodes; % convert to BIS trodes
+end
 
 [locs,identifier] = splitMontage(Montage,sid,interestNames,interestElecs);
 
@@ -23,11 +30,11 @@ interestElecs = {[1:32],[1:16],[1:8],[1:8],[1:8],[1:6],[1:6],[1:8]};
 locs = [locs(1:48,:);zeros(16,3);locs(49:78,:);zeros(2,3);locs(79:end,:)];
 identifier = [identifier(1:48,:);zeros(16,3);identifier(49:78,:);zeros(2,3);identifier(79:end,:)];
 
-saveIt = 1;
+saveIt = 0;
 plotIt = 1;
 %%
 if saveIt
-    save('20f8a3_mappedElectrodes_NEW.mat','locs','identifier','interestNames','interestElecs')
+    save('20f8a3_mappedElectrodes_NEW_BIS.mat','locs','identifier','interestNames','interestElecs')
 end
 
 %%
