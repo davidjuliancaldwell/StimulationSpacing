@@ -14,7 +14,7 @@ interestElecs = {[1:32],[1:32],[1,3:6],[1:6],[1:6],[1,3,5],[1,3,5,7],[1,3,5],[1,
 %interestNames = {'LPT'};
 %interestElecs = {1};
 
-convertBis = 1;
+convertBis = 0;
 
 if convertBis
     montageBISFilepath = strcat(SUB_DIR,'\',sid,'\','bis_trodes.mat');

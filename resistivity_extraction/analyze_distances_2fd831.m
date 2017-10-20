@@ -5,7 +5,7 @@ SUB_DIR = fullfile(myGetenv('subject_dir'));
 montageFilepath = strcat(SUB_DIR,'\',sid,'\',sid,'_Montage.mat');
 load(montageFilepath);
 load('2fd831_mappedElectrodes.mat')
-filePath = 'C:\Users\djcald.CSENETID\GoogleDrive\GRIDLabDavidShared\2fd831\StimulationSpacingChunked\stim_widePulse_121_55';
+filePath = 'C:\Users\djcald.CSENETID\GoogleDrive\GRIDLabDavidShared\2fd831\StimulationSpacingChunked\stim_widePulse_121_122';
 load(filePath)
 
 
@@ -99,12 +99,12 @@ colormap(CT)
 colorbar;
 
 %% Plot Cortex 
-badChans = [55 121];
+badChans = [122 121];
 % colorbrewer colormap
 % flip it so red is increase, blue is down
 CT = cbrewer('seq','PuRd',128);
 
-stimChans = [55 121];
+stimChans = [122 121];
 figure
 
 hold on

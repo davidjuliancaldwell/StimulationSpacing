@@ -120,8 +120,8 @@ numTrials = size(dataIntTime,3);
 
 for i = 1:numTrials
     sig_epoch = scale_factor.*squeeze(dataIntTime(:,:,i));
-    %[icasig_temp,mixing_mat_temp,sep_mat_temp] = fastica(sig_epoch','g','pow3','numOfIC',numComponentsSearch);
-    [icasig_temp,mixing_mat_temp,sep_mat_temp] = fastica(sig_epoch','g','gauss','approach','symm');
+    [icasig_temp,mixing_mat_temp,sep_mat_temp] = fastica(sig_epoch','g','gauss','numOfIC',numComponentsSearch);
+    %[icasig_temp,mixing_mat_temp,sep_mat_temp] = fastica(sig_epoch','g','pow3','approach','symm');
     i_icasigS{i} = icasig_temp;
     i_mixing_matS{i} = mixing_mat_temp;
     i_sep_matS{i} = sep_mat_temp;

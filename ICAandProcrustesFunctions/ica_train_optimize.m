@@ -269,6 +269,8 @@ for i = 1:numTrials
 
 end
 
-evaluated = objective_func_ica(data,processedSig,'fs',fs_data);
+%evaluated = objective_func_ica(data,processedSig,'fs',fs_data);
+
+evaluated = objective_func_ica_huber(data,processedSig,recon_artifact,'fs',fs_data,'plotIt',1); % try using huber loss function 
 
 end
