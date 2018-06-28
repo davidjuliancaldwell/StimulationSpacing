@@ -7,15 +7,15 @@
 close all;clear all;clc
 
 % change directory to whatever working directory is desired
-cd 'C:\Users\djcald\SharedCode\stimulation_spacing'
+cd 'C:\Users\djcald.CSENETID\SharedCode\stimulation_spacing'
 
 % make sure FastICA_25 is on the path
 %%
 % load data
 % DJC desktop
 
-load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\CSNE YSP 2016\1sBefore1safter\stim_12_52.mat')
-%load('C:\Users\djcald\Google Drive\GRIDLabDavidShared\CSNE YSP 2016\1sBefore1safter\stim_28_29.mat')
+load('C:\Users\djcald.CSENETID\GoogleDrive\GRIDLabDavidShared\CSNE YSP 2016\3f2113\1sBefore1safter\stim_12_52.mat')
+%load('C:\Users\djcald.CSENETID\Google Drive\GRIDLabDavidShared\CSNE YSP 2016\2f2113\1sBefore1safter\stim_28_29.mat')
 
 
 %%
@@ -32,7 +32,7 @@ bads = [12 52];
 pre = -400;
 post = 455;
 
-[icaMat, icaCell,artMat,artCell,tNew] =  ica_artifact_remove(t,data,bads,pre,post,fs_data,scale_factor,numComponentsSearch,plotIt,channelInt);
+[icaMat, icaCell,artMat,artCell,tNew] =  ica_artifact_remove(t,data,bads,fs_data,scale_factor,numComponentsSearch,plotIt,channelInt,pre,post);
 
 %% plot example channel
 
