@@ -46,10 +46,21 @@ end
 % burst sample number, to get the samples between the bursts. Then divide
 % by 2 and add back to the ending burst sample to get the middle sample. 
 sampsBetween = (bursts(2,2:end) - bursts(3,1:end-1));
-bursts(4,2:end) = floor(sampsBetween/2) + bursts(3,1:end-1); 
+bursts(4,2:end) = floor(sampsBetween/2) + bursts(3,1:end-1);
 % Set the first 'middle sample' to be mode(sampsBetween/2) before the first
-% burst 
+% burst
 bursts(4,1) = bursts(2,1) - mode(floor(sampsBetween/2));
+
+if strcmp(plotIt,'y')
+    % Plot the stim signal with start, end, and middle
+    figure
+    plot(stim), hold on
+    scatter(bursts(2,:), stim(bursts(2,:)), 'g')
+    scatter(bursts(3,:), stim(bursts(3,:)), 'r')
+    scatter(bursts(4,:), stim(bursts(4,:)), 'm', 'filled')
+    legend('stim signal', 'stim start', 'stim end', 'between stims')
+    title('stim signal with starts and ends')
+end
 
 %% Determine lengths of epochs
 % Decide how much data to pull out before and after the middle sample
@@ -63,7 +74,7 @@ if L >= min(floor(sampsBetween))
 end 
 
 %% Set stim delivery delay based on previous work:
-% get the delay in stim times (delay is about 0.2867 ms)
+% get the delay in stim samples (delay is about 0.2867 ms)
 delay = round(0.2867*fs_stim/1e3) + 14;
 
 %% Extract data
